@@ -35,7 +35,6 @@
     "compression": "^1.5.2",
     "cors": "^2.7.1",
     "express": "^4.13.3",
-    "mocha": "^5.2.0",
     "morgan": "^1.8.0",
     "resource-router-middleware": "^0.6.0"
   },
@@ -45,6 +44,7 @@
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-stage-0": "^6.5.0",
     "eslint": "^3.1.1",
+    "mocha": "^5.2.0",
     "nodemon": "^1.9.2"
   },
   "bugs": {
