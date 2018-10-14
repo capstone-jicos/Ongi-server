@@ -623,6 +623,9 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 
+### Ansible ###
+*.retry
+.vagrant/*
 
 # End of https://www.gitignore.io/api/node,macos,windows,webstorm,intellij,sublimetext,visualstudio
 /dist

@@ -3,38 +3,48 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
-import initializeDb from './db';
-import middleware from './middleware';
+import models from './models';
 import api from './api';
-import config from './config.json';
+import config from './config/app.json';
+import passport from 'passport';
+import LocalStrategy from 'passport-local';
+import session from 'express-session';
 
 let app = express();
 app.server = http.createServer(app);
 
-// logger
 app.use(morgan('dev'));
 
-// 3rd party middleware
-app.use(cors({
-	exposedHeaders: config.corsHeaders
+app.use(cors({exposedHeaders: config.corsHeaders}));
+app.use(session({secret: 'test'}));
+app.use(bodyParser.json({limit : config.bodyLimit}));
+app.use(bodyParser.urlencoded({limit: config.bodyLimit}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new LocalStrategy.Strategy((username, password, done) => {
+  // TODO 사용자 로그인 구현하기
+  if (username === 'test') {
+    if (password === '1234') {
+      return done(null, {username:'test'});
+    }
+  }
+  return done(null, false);
 }));
 
-app.use(bodyParser.json({
-	limit : config.bodyLimit
-}));
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
 
-// connect to db
-initializeDb( db => {
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
 
-	// internal middleware
-	app.use(middleware({ config, db }));
+// api router
+app.use('/api', api({ config, models, passport }));
 
-	// api router
-	app.use('/api', api({ config, db }));
-
-	app.server.listen(process.env.PORT || config.port, () => {
-		console.log(`Started on port ${app.server.address().port}`);
-	});
+app.server.listen(process.env.PORT || config.port, () => {
+  console.log(`Started on port ${app.server.address().port}`);
 });
 
 export default app;
