@@ -3,12 +3,13 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
-import models from './models';
+import db from './models';
 import api from './api';
 import config from './config/app.json';
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import session from 'express-session';
+import UserModel from './models/user';
 
 let app = express();
 app.server = http.createServer(app);
@@ -22,16 +23,6 @@ app.use(bodyParser.urlencoded({limit: config.bodyLimit}));
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.use(new LocalStrategy.Strategy((username, password, done) => {
-  // TODO 사용자 로그인 구현하기
-  if (username === 'test') {
-    if (password === '1234') {
-      return done(null, {username:'test'});
-    }
-  }
-  return done(null, false);
-}));
-
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
@@ -40,11 +31,22 @@ passport.deserializeUser(function(user, done) {
   done(null, user);
 });
 
-// api router
-app.use('/api', api({ config, models, passport }));
+passport.use(new LocalStrategy.Strategy((username, password, done) => {
+  const User = UserModel(db.sequelize, db.Sequelize);
+  User.findOne({where: {username: username}}).then(user => {
+    if(!user) return done(null, false);
+    if(user.dataValues.password != password) return done(null, false);
+    return done(null, user)
+  })
+}));
 
-app.server.listen(process.env.PORT || config.port, () => {
-  console.log(`Started on port ${app.server.address().port}`);
-});
+// api router
+app.use('/api', api({ config, db, passport }));
+
+db.sequelize.sync().then(function(){
+  app.server.listen(process.env.PORT || config.port, () => {
+    console.log(`Started on port ${app.server.address().port}`);
+  });  
+})
 
 export default app;

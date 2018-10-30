@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "",
-    "password": "",
-    "database": "",
-    "host": "",
+    "username": "jicos",
+    "password": "jicos1234!",
+    "database": "jicos",
+    "host": "jicos.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
     "dialect": "mysql"
   },
   "test": {

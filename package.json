@@ -59,5 +59,8 @@
   "homepage": "https://github.com/developit/express-es6-rest-api#readme",
   "keywords": [
     "jicos"
-  ]
+  ],
+  "directories": {
+    "test": "test"
+  }
 }
