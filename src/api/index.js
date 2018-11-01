@@ -6,7 +6,8 @@ export default ({config, db, passport}) => {
   let api = Router();
 
   // perhaps expose some API metadata at the root
-  api.get('/', sessionChecker(), (req, res) => {
+  api.get('/', (req, res) => {
+    console.log(req.query.key)
     res.json({version});
   });
 
@@ -16,3 +17,4 @@ export default ({config, db, passport}) => {
 
   return api;
 };
+  

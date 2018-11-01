@@ -9,7 +9,7 @@ import config from './config/app.json';
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import session from 'express-session';
-import UserModel from './models/user';
+import UserModel from './models/users';
 
 let app = express();
 app.server = http.createServer(app);
@@ -24,19 +24,26 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.serializeUser(function(user, done) {
+  console.log(user);
   done(null, user);
 });
 
 passport.deserializeUser(function(user, done) {
+  console.log(user);
   done(null, user);
 });
 
-passport.use(new LocalStrategy.Strategy((username, password, done) => {
+passport.use(new LocalStrategy({
+  usernameField:'username',
+  passwordField:'password',
+  session: true
+},
+function(username, password, done){
   const User = UserModel(db.sequelize, db.Sequelize);
   User.findOne({where: {username: username}}).then(user => {
     if(!user) return done(null, false);
     if(user.dataValues.password != password) return done(null, false);
-    return done(null, user)
+    return done(null, user);
   })
 }));
 
