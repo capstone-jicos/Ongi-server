@@ -1,6 +1,7 @@
 import { version } from '../../package.json';
 import { Router } from 'express';
 import sessionChecker from '../session-checker';
+import event from './event';
 
 export default ({config, db, passport}) => {
   let api = Router();
@@ -14,6 +15,8 @@ export default ({config, db, passport}) => {
   api.post('/login', passport.authenticate('local'), (req, res) => {
     res.sendStatus(200);
   });
+
+  api.use('/event', event({ config, db }));
 
   return api;
 };
