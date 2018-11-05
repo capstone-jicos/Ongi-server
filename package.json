@@ -37,6 +37,7 @@
     "express": "^4.13.3",
     "express-session": "^1.15.6",
     "morgan": "^1.8.0",
+    "mysql": "^2.16.0",
     "mysql2": "^1.6.1",
     "passport-local": "^1.0.0",
     "resource-router-middleware": "^0.6.0",

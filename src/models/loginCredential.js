@@ -1,29 +1,30 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('userPayments', {
-    userId: {
+  return sequelize.define('loginCredential', {
+    provider: {
+      type: DataTypes.STRING(3),
+      allowNull: false,
+      primaryKey: true
+    },
+    uniqueId: {
       type: DataTypes.STRING(64),
       allowNull: false,
+      primaryKey: true,
       references: {
         model: 'users',
         key: 'uniqueId'
       }
     },
-    billingId: {
+    userId: {
       type: DataTypes.STRING(64),
-      allowNull: false,
-      primaryKey: true
-    },
-    cardType: {
-      type: DataTypes.STRING(3),
       allowNull: false
     },
-    cardNum: {
-      type: DataTypes.INTEGER(2),
+    accessToken: {
+      type: DataTypes.STRING(32),
       allowNull: false
     }
   }, {
-    tableName: 'userPayments'
+    tableName: 'loginCredential'
   });
 };

@@ -1,17 +1,21 @@
-'use strict';
-module.exports = (sequelize, DataTypes) => {
-  const paymentLog = sequelize.define('paymentLog', {
+/* jshint indent: 2 */
+
+module.exports = function(sequelize, DataTypes) {
+  return sequelize.define('paymentLog', {
     transactionId: {
-      type : DataTypes.STRING,
-      primaryKey : true
+      type: DataTypes.STRING(64),
+      allowNull: false,
+      primaryKey: true
     },
-    userId: DataTypes.STRING
+    userId: {
+      type: DataTypes.STRING(64),
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'uniqueId'
+      }
+    }
   }, {
-    timestamps: false,
-    freezeTableName: true
+    tableName: 'paymentLog'
   });
-  paymentLog.associate = function(models) {
-    // associations can be defined here
-  };
-  return paymentLog;
 };

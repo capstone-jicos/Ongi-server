@@ -1,21 +1,33 @@
-'use strict';
-module.exports = (sequelize, DataTypes) => {
-  const venue = sequelize.define('venue', {
+/* jshint indent: 2 */
+
+module.exports = function(sequelize, DataTypes) {
+  return sequelize.define('venue', {
     idx: {
-      type : DataTypes.STRING,
-      primaryKey : true
+      type: DataTypes.STRING(64),
+      allowNull: false,
+      primaryKey: true
     },
-    country: DataTypes.STRING,
-    state: DataTypes.STRING,
-    city: DataTypes.STRING,
-    streetAddress: DataTypes.TEXT,
-    detailAddress: DataTypes.TEXT
+    country: {
+      type: DataTypes.STRING(3),
+      allowNull: false
+    },
+    state: {
+      type: DataTypes.STRING(10),
+      allowNull: false
+    },
+    city: {
+      type: DataTypes.STRING(20),
+      allowNull: false
+    },
+    streetAddress: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
+    detailAddress: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    }
   }, {
-    timestamps: false,
-    freezeTableName: true
+    tableName: 'venue'
   });
-  venue.associate = function(models) {
-    // associations can be defined here
-  };
-  return venue;
 };

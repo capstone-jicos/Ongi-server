@@ -1,25 +1,51 @@
-'use strict';
-module.exports = (sequelize, DataTypes) => {
-  const comments = sequelize.define('comments', {
+/* jshint indent: 2 */
+
+module.exports = function(sequelize, DataTypes) {
+  return sequelize.define('comments', {
     idx: {
-      type : DataTypes.STRING,
-      primaryKey : true
+      type: DataTypes.STRING(64),
+      allowNull: false,
+      primaryKey: true
     },
-    eventId: DataTypes.STRING,
+    eventId: {
+      type: DataTypes.STRING(64),
+      allowNull: false,
+      references: {
+        model: 'events',
+        key: 'idx'
+      }
+    },
     parentId: {
-      type : DataTypes.STRING,
-      defaultValue : null
+      type: DataTypes.STRING(64),
+      allowNull: true,
+      references: {
+        model: 'comments',
+        key: 'idx'
+      }
     },
-    writerId: DataTypes.STRING,
-    comment: DataTypes.TEXT,
-    createdAt : DataTypes.DATE,
-    updatedAt:DataTypes.DATE
+    writerId: {
+      type: DataTypes.STRING(64),
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'uniqueId'
+      }
+    },
+    comment: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+    }
   }, {
-    timestamps: false,
-    freezeTableName: true
+    tableName: 'comments'
   });
-  comments.associate = function(models) {
-    // associations can be defined here
-  };
-  return comments;
 };

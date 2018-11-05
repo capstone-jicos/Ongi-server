@@ -1,21 +1,30 @@
-'use strict';
-module.exports = (sequelize, DataTypes) => {
-  const attendees = sequelize.define('attendees', {
+/* jshint indent: 2 */
+
+module.exports = function(sequelize, DataTypes) {
+  return sequelize.define('attendees', {
     eventId: {
-      type : DataTypes.STRING,
-      primaryKey : true
+      type: DataTypes.STRING(64),
+      allowNull: false,
+      primaryKey: true,
+      references: {
+        model: 'events',
+        key: 'idx'
+      }
     },
     attendeeId: {
-      type : DataTypes.STRING,
-      primaryKey : true
+      type: DataTypes.STRING(64),
+      allowNull: false,
+      primaryKey: true,
+      references: {
+        model: 'users',
+        key: 'uniqueId'
+      }
     },
-    attending: DataTypes.INTEGER
+    attending: {
+      type: DataTypes.INTEGER(1),
+      allowNull: false
+    }
   }, {
-    timestamps: false,
-    freezeTableName: true
+    tableName: 'attendees'
   });
-  attendees.associate = function(models) {
-    // associations can be defined here
-  };
-  return attendees;
 };
