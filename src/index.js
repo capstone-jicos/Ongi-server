@@ -9,7 +9,7 @@ import config from './config/app.json';
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import session from 'express-session';
-import UserModel from './models/users';
+import UserModel from './models/loginCredential';
 
 let app = express();
 app.server = http.createServer(app);
@@ -34,13 +34,13 @@ passport.deserializeUser(function(user, done) {
 });
 
 passport.use(new LocalStrategy({
-  usernameField:'username',
-  passwordField:'password',
+  usernameField:'userId',
+  passwordField:'accessToken',
   session: true
 },
 function(username, password, done){
   const User = UserModel(db.sequelize, db.Sequelize);
-  User.findOne({where: {userId: userId}}).then(user => {
+  User.findOne({where: {userId: username}}).then(user => {
     if(!user) return done(null, false);
     if(user.dataValues.accessToken != password) return done(null, false);
     return done(null, user);

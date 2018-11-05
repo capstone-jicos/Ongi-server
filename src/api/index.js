@@ -2,6 +2,7 @@ import { version } from '../../package.json';
 import { Router } from 'express';
 import sessionChecker from '../session-checker';
 import event from './event';
+import users from '../models/users';
 
 export default ({config, db, passport}) => {
   let api = Router();
@@ -12,8 +13,12 @@ export default ({config, db, passport}) => {
   });
 
   api.post('/login', passport.authenticate('local'), (req, res) => {
-    res.sendStatus(200);
+    const userModel = users(db.sequelize, db.Sequelize);
+    userModel.findOne({where : {uniqueId : req.user.dataValues.uniqueId}}).then(userData =>{
+      res.send(userData);
+    });
   });
+
 
   api.use('/event', event({ config, db }));
 
