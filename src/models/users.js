@@ -32,6 +32,8 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     }
   }, {
+    timestamps: false,
+    freezeTableName: true,
     tableName: 'users'
   });
 };

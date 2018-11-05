@@ -40,9 +40,9 @@ passport.use(new LocalStrategy({
 },
 function(username, password, done){
   const User = UserModel(db.sequelize, db.Sequelize);
-  User.findOne({where: {username: username}}).then(user => {
+  User.findOne({where: {userId: userId}}).then(user => {
     if(!user) return done(null, false);
-    if(user.dataValues.password != password) return done(null, false);
+    if(user.dataValues.accessToken != password) return done(null, false);
     return done(null, user);
   })
 }));

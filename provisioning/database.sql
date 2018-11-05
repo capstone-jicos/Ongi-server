@@ -1,4 +1,4 @@
-USE ongi;
+USE ongi1;
 CREATE TABLE users (
     uniqueId VARCHAR(64) NOT NULL,          -- 사용자 고유식별 ID (해쉬값으로)
     displayName VARCHAR(64) NOT NULL,       -- 사용자 이름 (닉네임 같은 것)
