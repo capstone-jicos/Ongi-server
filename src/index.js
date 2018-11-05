@@ -48,7 +48,7 @@ function(username, password, done){
 }));
 
 // api router
-app.use('/api', api({ config, db, passport }));
+app.use('/', api({ config, db, passport }));
 
 db.sequelize.sync().then(function(){
   app.server.listen(process.env.PORT || config.port, () => {
