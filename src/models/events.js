@@ -34,6 +34,10 @@ module.exports = function(sequelize, DataTypes) {
     feeAmount: {
       type: DataTypes.INTEGER(10),
       allowNull: false
+    },
+    eventImages: {
+      type: DataTypes.STRING(45),
+      allowNull: false
     }
   }, {
     timestamps: false,

@@ -26,6 +26,22 @@ module.exports = function(sequelize, DataTypes) {
     detailAddress: {
       type: DataTypes.TEXT,
       allowNull: false
+    },
+    lat: {
+      type: DataTypes.STRING(15),
+      allowNull: false
+    },
+    lng: {
+      type: DataTypes.STRING(15),
+      allowNull: false
+    },
+    uniqueId: {
+      type: DataTypes.STRING(45),
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'uniqueId'
+      }
     }
   }, {
     timestamps: false,
