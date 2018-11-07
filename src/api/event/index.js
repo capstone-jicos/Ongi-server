@@ -2,8 +2,7 @@ import {Router} from 'express';
 import event from '../../models/events';
 import venue from '../../models/venue';
 import users from '../../models/users';
-import https from 'https';
-
+import attendees from '../../models/attendees'
 
 
 export default ({config, db}) => {
@@ -14,9 +13,10 @@ export default ({config, db}) => {
     const eventModel = event(db.sequelize, db.Sequelize);
     const venueModel = venue(db.sequelize, db.Sequelize);
     const userModel = users(db.sequelize, db.Sequelize);
+    const attendeeModel = attendees(db.sequelize, db.Sequelize);
 
-    var index;
 
+    var eventIndex;
     var venueId;
 
     var title,description,eventImage,remainingSeat;
@@ -37,8 +37,9 @@ export default ({config, db}) => {
     });
     
     
-    api.get('/:index', function(req,res) {
+    api.get('/:id', function(req,res) {
 
+        eventIndex = req.params.id;
         async.series([
 
             // events 테이블 참조
@@ -47,7 +48,7 @@ export default ({config, db}) => {
             function(callback){
                 eventModel.findOne({ 
                     where: {
-                        idx: req.params.index
+                        idx: eventIndex
                     }
                 })
                 .then(event => {      
@@ -149,6 +150,46 @@ export default ({config, db}) => {
         
         );
     });
+
+
+    // 참석자 목록 받아오기
+    api.get('/:id/attendees', (req, res) => {
+        var attendeesNum;
+        var attendNameArr = [];
+
+        async.series([
+
+            function(callback){
+                attendeeModel.findAll({
+                    where: {
+                        eventId: req.params.id,
+                        attending: 1
+                    }
+                }) 
+                .then(attendee => {
+                    console.log(eventIndex);
+                    attendeesNum = attendee.length;
+                    for (var i=0; i<attendeesNum; i++){
+                        attendNameArr[i] = attendee[i]["attendeeId"];
+                    }
+                    callback(null,1);
+                });
+            }],
+
+            function(callback){
+                userModel.findAll({
+                    where: {
+                        uniqueId: attendNameArr
+                    }
+                })
+                .then(userList => {
+                    res.json(userList);
+
+                });
+            }
+        );
+    });
+
     
     return api;
 };
