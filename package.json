@@ -31,6 +31,7 @@
   "author": "Jason Miller <jason@developit.ca>",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.6.1",
     "body-parser": "^1.13.3",
     "compression": "^1.5.2",
     "cors": "^2.7.1",
@@ -40,6 +41,7 @@
     "mysql": "^2.16.0",
     "mysql2": "^1.6.1",
     "passport-local": "^1.0.0",
+    "require-from-url": "^3.1.2",
     "resource-router-middleware": "^0.6.0",
     "sequelize": "^4.39.0",
     "sequelize-cli": "^5.0.1"
