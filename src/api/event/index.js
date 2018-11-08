@@ -28,12 +28,75 @@ export default ({config, db}) => {
     var providerId,providerName,providerImage;
 
 
+    // 모임 검색
+    // country=? & state=?
     api.get('/', (req, res) => {
 
-        eventModel.findAll() 
-        .then(event => {
-            res.json(event);
-        });
+        var getCountry = req.query.country;
+        var getState = req.query.state;
+
+        var venueIndexArr = [];
+        var venueIndexLen;
+
+
+        async.series([
+            function(callback){
+                console.log(getCountry);
+                console.log(getState);
+
+                if(getCountry != undefined && getState != undefined) {
+                    venueModel.findAll({
+                        where: {
+                            country: getCountry,
+                            state: getState
+                        }
+                    }) 
+                    .then(venueIdx => {
+                        venueIndexLen = venueIdx.length;
+                        for (var i=0; i<venueIndexLen; i++){
+                            venueIndexArr[i] = venueIdx[i]["idx"];
+                        }
+                        callback(null,1);
+                    });    
+                } else if(getCountry != undefined && getState == undefined) {
+                    venueModel.findAll({
+                        where: {
+                            country: getCountry
+                        }
+                    }) 
+                    .then(venueIdx => {
+                        venueIndexLen = venueIdx.length;
+                        for (var i=0; i<venueIndexLen; i++){
+                            venueIndexArr[i] = venueIdx[i]["idx"];
+                        }
+                        callback(null,1);
+                    });
+                } else {
+                    venueModel.findAll() 
+                    .then(venueIdx => {
+                        venueIndexLen = venueIdx.length;
+                        for (var i=0; i<venueIndexLen; i++){
+                            venueIndexArr[i] = venueIdx[i]["idx"];
+                        }
+                        callback(null,1);
+                    });
+                }
+            }
+        ],
+
+        function(callback){
+            eventModel.findAll({
+                where: {
+                    venueId: venueIndexArr
+                }
+            })
+            .then(venueList => {
+                res.json(venueList);
+
+            });
+        }
+
+        );
     });
     
     
@@ -167,7 +230,6 @@ export default ({config, db}) => {
                     }
                 }) 
                 .then(attendee => {
-                    console.log(eventIndex);
                     attendeesNum = attendee.length;
                     for (var i=0; i<attendeesNum; i++){
                         attendNameArr[i] = attendee[i]["attendeeId"];
@@ -189,7 +251,6 @@ export default ({config, db}) => {
             }
         );
     });
-
-    
+  
     return api;
 };
