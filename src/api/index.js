@@ -3,6 +3,9 @@ import { Router } from 'express';
 import sessionChecker from '../session-checker';
 import event from './event';
 import users from '../models/users';
+import credential from '../models/loginCredential';
+import timestamp from 'unix-timestamp';
+import async from 'async';
 
 export default ({config, db, passport}) => {
   let api = Router();
@@ -19,6 +22,37 @@ export default ({config, db, passport}) => {
     });
   });
 
+  api.post('/join', (req, res) => {
+    const userModel = users(db.sequelize, db.Sequelize);
+    const credentialModel = credential(db.sequelize, db.Sequelize);
+    credentialModel.findOne({where : {userId:req.body.userId}}).then(userData => {
+      if(userData){ //가입 불가능
+        res.sendStatus(412);
+      }
+      if(!userData){ // 가입 가능
+        var id = timestamp.now()*1000;
+        async.series([
+          function(callback){
+            userModel.create({
+              uniqueId : id,
+              displayName : req.body.displayName,
+              gender : req.body.gender
+            }).then(callback(null, 1));
+          },
+          function(callback){
+            credentialModel.create({
+              provider : 'loc',
+              uniqueId : id,
+              userId : req.body.userId,
+              accessToken : req.body.accessToken
+            }).then(callback(null,1));
+          },
+        ], function(err, result){
+          res.sendStatus(200);
+        });
+      }
+    });
+  });
 
   api.use('/event', event({ config, db }));
 

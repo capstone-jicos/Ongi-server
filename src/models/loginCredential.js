@@ -11,6 +11,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(64),
       allowNull: false,
       primaryKey: true,
+      foreignKey: true,
       references: {
         model: 'users',
         key: 'uniqueId'
