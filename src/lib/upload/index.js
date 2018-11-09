@@ -27,6 +27,7 @@ export default({config, db, passport}) =>{
             if(!err){
                 res.json({success:true, msg:'업로드 성공'})
                 next()
+                console.log("dd")
             }else{
                 res.json({success:false, msg:'실패', err:err})
                 next()
