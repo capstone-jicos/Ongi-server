@@ -15,6 +15,11 @@ export default ({config, db, passport}) => {
     res.json({version});
   });
 
+  api.get('/logout', function(req, res){
+    req.logout();
+    res.sendStatus(200);//나중에는 redirect를 해야될듯
+  });
+
   api.post('/login', passport.authenticate('local'), (req, res) => {
     const userModel = users(db.sequelize, db.Sequelize);
     userModel.findOne({where : {uniqueId : req.user.dataValues.uniqueId}}).then(userData =>{
@@ -36,7 +41,11 @@ export default ({config, db, passport}) => {
             userModel.create({
               uniqueId : id,
               displayName : req.body.displayName,
-              gender : req.body.gender
+              profileImage : req.body.profileImage,
+              gender : req.body.gender,
+              country : req.body.country,
+              state : req.body.state,
+              city : req.body.city
             }).then(callback(null, 1));
           },
           function(callback){
@@ -45,10 +54,10 @@ export default ({config, db, passport}) => {
               uniqueId : id,
               userId : req.body.userId,
               accessToken : req.body.accessToken
-            }).then(callback(null,1));
+            }).then(callback(null, 1));
           },
         ], function(err, result){
-          res.sendStatus(200);
+          res.send(200);
         });
       }
     });
