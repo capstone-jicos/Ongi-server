@@ -3,7 +3,7 @@ import event from '../../models/events';
 import venue from '../../models/venue';
 import users from '../../models/users';
 import attendees from '../../models/attendees'
-
+import sessionChecker from '../../session-checker';
 
 export default ({config, db}) => {
     let api = Router();
@@ -41,9 +41,6 @@ export default ({config, db}) => {
 
         async.series([
             function(callback){
-                console.log(getCountry);
-                console.log(getState);
-
                 if(getCountry != undefined && getState != undefined) {
                     venueModel.findAll({
                         where: {
@@ -103,7 +100,28 @@ export default ({config, db}) => {
     api.get('/:id', function(req,res) {
 
         eventIndex = req.params.id;
+        var usId = req.query.user;
+        var attendCheck = false;
+
         async.series([
+            function(callback){
+
+                attendeeModel.findAll({
+                    where: {
+                        eventId: eventIndex,
+                        attendeeId: usId,
+                        attending: 1
+                    }
+                })
+                .then(attendChk => {
+                    if (attendChk.length > 0) {
+                        attendCheck = true;
+                    } else{
+                        attendCheck = false;
+                    }
+                    callback(null,1);
+                })
+            },
 
             // events 테이블 참조
             // index에 해당하는 데이터 가져오기
@@ -184,6 +202,7 @@ export default ({config, db}) => {
         // result 전달
         function(err, results) {
             var val = {
+                "attendCheck": attendCheck,
                 "title": title,
                 "description": description,
                 "location": {
@@ -252,5 +271,78 @@ export default ({config, db}) => {
         );
     });
   
+    // 모임 참가 신청
+    // session ID 확인 필요
+    api.post('/:id/join', (req, res) => {
+
+        var eventId = req.params.id;
+        var sId = req.body.user;
+        console.log(sId);
+
+        var attending = 1;
+
+        var haveData_1 = false;
+        var haveData_0 = false;
+        var NoData = false;
+
+        async.series([
+
+            function(callback){
+                attendeeModel.findAll({
+                    where: {
+                        eventId: eventId,
+                        attendeeId: sId,
+                    }
+                }) 
+                .then(attendChk => {
+                    if (attendChk.length > 0) {
+                        if (attendChk[0]['attending'] == 0) {
+                            haveData_1 = false;
+                            haveData_0 = true;
+                            NoData = false;
+                        } else{
+                            haveData_1 = true;
+                            haveData_0 = false;
+                            NoData = false;
+                        }
+                    } else {
+                        haveData_1 = false;
+                        haveData_0 = false;
+                        NoData = true;
+                    }
+                    callback(null,1);
+                });
+            }
+        ],
+
+        function(){
+            if (NoData) {
+                attendeeModel.create({
+                    eventId: eventId,
+                    attendeeId: sId,
+                    attending: attending
+                }).then(
+                    res.sendStatus(201)
+                );
+            } 
+            else if (haveData_0) {
+                attendeeModel.update(
+                    {attending: 1},
+                    {
+                    where: {
+                        eventId: eventId,
+                        attendeeId: sId
+                    }
+                }).then(
+                    res.sendStatus(201)
+                );
+            } 
+            else {
+                res.sendStatus(403)
+            }
+        });        
+            
+    });
+    
     return api;
 };

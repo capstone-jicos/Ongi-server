@@ -12,7 +12,7 @@ export default ({config, db, passport}) => {
 
   // perhaps expose some API metadata at the root
   api.get('/', sessionChecker(), (req, res) => {
-    res.json({version});
+    res.send(req.user);
   });
 
   api.post('/login', passport.authenticate('local'), (req, res) => {
@@ -54,7 +54,7 @@ export default ({config, db, passport}) => {
     });
   });
 
-  api.use('/event', event({ config, db }));
+  api.use('/event', event({ config, db, passport }));
 
   return api;
 };
