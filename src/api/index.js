@@ -2,6 +2,7 @@ import { version } from '../../package.json';
 import { Router } from 'express';
 import sessionChecker from '../session-checker';
 import event from './event';
+import user from './user';
 import users from '../models/users';
 import credential from '../models/loginCredential';
 import timestamp from 'unix-timestamp';
@@ -46,7 +47,11 @@ export default ({config, db, passport}) => {
               country : req.body.country,
               state : req.body.state,
               city : req.body.city
-            }).then(callback(null, 1));
+            }).then(function (result){
+              callback(null, result);
+            }).catch(function (err){
+              callback(err, null)
+            });
           },
           function(callback){
             credentialModel.create({
@@ -54,16 +59,22 @@ export default ({config, db, passport}) => {
               uniqueId : id,
               userId : req.body.userId,
               accessToken : req.body.accessToken
-            }).then(callback(null, 1));
+            }).then(function (result){
+              callback(null, result);
+            }).catch(function (err){
+              callback(err, null);
+            });
           },
         ], function(err, result){
-          res.send(200);
+          if(err) res.send(err)
+          else res.send(result)
         });
       }
     });
   });
 
   api.use('/event', event({ config, db }));
+  api.use('/user', user({config, db, passport}));
 
   return api;
 };
