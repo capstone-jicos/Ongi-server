@@ -102,6 +102,7 @@ export default ({config, db}) => {
         eventIndex = req.params.id;
         var usId = req.query.user;
         var attendCheck = false;
+        var hostCheck = false;
 
         async.series([
             function(callback){
@@ -133,7 +134,6 @@ export default ({config, db}) => {
                     }
                 })
                 .then(event => {      
-
                     title = event['title'];
                     description = event['description'];
                     hostId = event['hostId'];
@@ -141,6 +141,11 @@ export default ({config, db}) => {
                     remainingSeat = event['feeAmount'];
                     eventImage = event['eventImage'];
 
+                    if (hostId == usId) {
+                        hostCheck = true;
+                    } else {
+                        hostCheck = false;
+                    }
                     callback(null,1);
                 })
             },
@@ -202,7 +207,6 @@ export default ({config, db}) => {
         // result 전달
         function(err, results) {
             var val = {
-                "attendCheck": attendCheck,
                 "title": title,
                 "description": description,
                 "location": {
@@ -224,7 +228,9 @@ export default ({config, db}) => {
                     "name": providerName,
                     "profileImage": providerImage
                 },
-                "remainingSeat": remainingSeat
+                "remainingSeat": remainingSeat,
+                "attendCheck": attendCheck,
+                "hostCheck": hostCheck
             };
             
             res.send(val);
@@ -238,6 +244,9 @@ export default ({config, db}) => {
     api.get('/:id/attendees', (req, res) => {
         var attendeesNum;
         var attendNameArr = [];
+
+        var attendListJson = {};
+        var attendListArr = [];
 
         async.series([
 
@@ -264,7 +273,17 @@ export default ({config, db}) => {
                     }
                 })
                 .then(userList => {
-                    res.json(userList);
+
+                    for(var i=0; i<userList.length; i++) {
+                        attendListJson = {
+                            "uniqueId": userList[i]['uniqueId'],
+                            "displayName": userList[i]['displayName'],
+                            "profileImage": userList[i]['profileImage']
+                        }
+                        attendListArr[i] = attendListJson;
+                    }
+                    
+                    res.json(attendListArr);
 
                 });
             }

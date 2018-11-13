@@ -1,7 +1,8 @@
 import { version } from '../../package.json';
 import { Router } from 'express';
 import sessionChecker from '../session-checker';
-import event from './event';
+import eventPage from './event';
+import userPage from './user';
 import users from '../models/users';
 import credential from '../models/loginCredential';
 import timestamp from 'unix-timestamp';
@@ -54,7 +55,9 @@ export default ({config, db, passport}) => {
     });
   });
 
-  api.use('/event', event({ config, db, passport }));
+  api.use('/event', eventPage({ config, db, passport }));
+
+  api.use('/user', userPage({ config, db }));
 
   return api;
 };
