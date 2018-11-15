@@ -3,9 +3,22 @@
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('venue', {
     idx: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.INTEGER(11),
       allowNull: false,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
+    },
+    uniqueId: {
+      type: DataTypes.STRING(45),
+      allowNull: false
+    },
+    type: {
+      type: DataTypes.STRING(64),
+      allowNull: false
+    },
+    accomodate: {
+      type: DataTypes.INTEGER(10),
+      allowNull: false
     },
     country: {
       type: DataTypes.STRING(3),
@@ -19,29 +32,37 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(20),
       allowNull: false
     },
-    streetAddress: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    detailAddress: {
+    detail: {
       type: DataTypes.TEXT,
       allowNull: false
     },
     lat: {
       type: DataTypes.STRING(15),
-      allowNull: false
+      allowNull: true
     },
     lng: {
       type: DataTypes.STRING(15),
+      allowNull: true
+    },
+    amenities: {
+      type: DataTypes.TEXT,
       allowNull: false
     },
-    uniqueId: {
+    photoUrl: {
       type: DataTypes.STRING(45),
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'uniqueId'
-      }
+      allowNull: false
+    },
+    name: {
+      type: DataTypes.STRING(45),
+      allowNull: false
+    },
+    rules: {
+      type: DataTypes.STRING(45),
+      allowNull: false
+    },
+    fee: {
+      type: DataTypes.STRING(45),
+      allowNull: false
     }
   }, {
     timestamps: false,

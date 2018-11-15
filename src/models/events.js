@@ -24,7 +24,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     venueId: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.INTEGER(11),
       allowNull: false,
       references: {
         model: 'venue',
@@ -37,6 +37,14 @@ module.exports = function(sequelize, DataTypes) {
     },
     eventImages: {
       type: DataTypes.STRING(45),
+      allowNull: true
+    },
+    type: {
+      type: DataTypes.STRING(45),
+      allowNull: true
+    },
+    seats: {
+      type: DataTypes.INTEGER(10),
       allowNull: false
     },
     type: {
