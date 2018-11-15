@@ -3,17 +3,20 @@ import { Router } from 'express';
 import sessionChecker from '../session-checker';
 import event from './event';
 import user from './user';
+import venue from './venue';
 import users from '../models/users';
 import credential from '../models/loginCredential';
 import timestamp from 'unix-timestamp';
 import async from 'async';
+import upload from '../lib/upload';
 
 export default ({config, db, passport}) => {
   let api = Router();
 
   // perhaps expose some API metadata at the root
-  api.get('/', sessionChecker(), (req, res) => {
-    res.json({version});
+  api.get('/', upload(config), (req, res) => {
+    console.log(req.fields);
+    //res.json({version});
   });
 
   api.get('/logout', function(req, res){
@@ -75,6 +78,7 @@ export default ({config, db, passport}) => {
 
   api.use('/event', event({ config, db }));
   api.use('/user', user({config, db, passport}));
+  api.use('/venue', venue({config, db, passport}));
 
   return api;
 };
