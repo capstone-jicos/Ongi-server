@@ -3,7 +3,7 @@
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('events', {
     idx: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.INTEGER(11),
       allowNull: false,
       primaryKey: true
     },
@@ -45,6 +45,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     seats: {
       type: DataTypes.INTEGER(10),
+      allowNull: false
+    },
+    date: {
+      type: DataTypes.STRING(45),
       allowNull: false
     }
   }, {

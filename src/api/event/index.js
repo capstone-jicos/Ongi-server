@@ -365,21 +365,22 @@ export default ({config, db}) => {
             
     });
 
-    api.post('/create', (req, res) => {
-        var userId = req.params.user;
+    api.post('/create', (req, res, err) => {
+        var userId = req.query.user;
 
         eventModel.create({
-            title: req.body.name,
+            title: req.body.title,
             description: req.body.description,
             hostId: userId,
             venueId: req.body.venueId,
             feeAmount: req.body.fee,
             eventImages: req.body.photoUrl,
             type: req.body.type,
-            seats: req.body.seats
+            seats: req.body.seats,
+            date: req.body.date
         })
         .then(
-            res.sendStatus()
+            console.log(err)
         )
     });
     

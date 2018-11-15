@@ -8,7 +8,7 @@ module.exports = function(sequelize, DataTypes) {
       primaryKey: true
     },
     eventId: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.INTEGER(11),
       allowNull: false,
       references: {
         model: 'events',
