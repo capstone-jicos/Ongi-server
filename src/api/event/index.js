@@ -3,7 +3,7 @@ import event from '../../models/events';
 import venue from '../../models/venue';
 import users from '../../models/users';
 import attendees from '../../models/attendees'
-
+import sessionChecker from '../../session-checker';
 
 export default ({config, db}) => {
     let api = Router();
@@ -19,7 +19,7 @@ export default ({config, db}) => {
     var eventIndex;
     var venueId;
 
-    var title,description,eventImage,remainingSeat;
+    var title,description,eventImage,seats,feeAmount;
 
     var locationName, locationAddress;
     var coordinates_lat, coordinates_lng;
@@ -41,9 +41,6 @@ export default ({config, db}) => {
 
         async.series([
             function(callback){
-                console.log(getCountry);
-                console.log(getState);
-
                 if(getCountry != undefined && getState != undefined) {
                     venueModel.findAll({
                         where: {
@@ -103,7 +100,29 @@ export default ({config, db}) => {
     api.get('/:id', function(req,res) {
 
         eventIndex = req.params.id;
+        var usId = req.query.user;
+        var attendCheck = false;
+        var hostCheck = false;
+
         async.series([
+            function(callback){
+
+                attendeeModel.findAll({
+                    where: {
+                        eventId: eventIndex,
+                        attendeeId: usId,
+                        attending: 1
+                    }
+                })
+                .then(attendChk => {
+                    if (attendChk.length > 0) {
+                        attendCheck = true;
+                    } else{
+                        attendCheck = false;
+                    }
+                    callback(null,1);
+                })
+            },
 
             // events 테이블 참조
             // index에 해당하는 데이터 가져오기
@@ -115,14 +134,19 @@ export default ({config, db}) => {
                     }
                 })
                 .then(event => {      
-
                     title = event['title'];
                     description = event['description'];
                     hostId = event['hostId'];
                     venueId = event['venueId'];
-                    remainingSeat = event['feeAmount'];
+                    seats = event['seats'];
+                    feeAmount = event['feeAmount'];
                     eventImage = event['eventImage'];
 
+                    if (hostId == usId) {
+                        hostCheck = true;
+                    } else {
+                        hostCheck = false;
+                    }
                     callback(null,1);
                 })
             },
@@ -205,7 +229,10 @@ export default ({config, db}) => {
                     "name": providerName,
                     "profileImage": providerImage
                 },
-                "remainingSeat": remainingSeat
+                "seats": seats,
+                "feeAmount": feeAmount,
+                "attendCheck": attendCheck,
+                "hostCheck": hostCheck
             };
             
             res.send(val);
@@ -219,6 +246,9 @@ export default ({config, db}) => {
     api.get('/:id/attendees', (req, res) => {
         var attendeesNum;
         var attendNameArr = [];
+
+        var attendListJson = {};
+        var attendListArr = [];
 
         async.series([
 
@@ -245,12 +275,114 @@ export default ({config, db}) => {
                     }
                 })
                 .then(userList => {
-                    res.json(userList);
+
+                    for(var i=0; i<userList.length; i++) {
+                        attendListJson = {
+                            "uniqueId": userList[i]['uniqueId'],
+                            "displayName": userList[i]['displayName'],
+                            "profileImage": userList[i]['profileImage']
+                        }
+                        attendListArr[i] = attendListJson;
+                    }
+                    
+                    res.json(attendListArr);
 
                 });
             }
         );
     });
   
+    // 모임 참가 신청
+    // session ID 확인 필요
+    api.post('/:id/join', (req, res) => {
+
+        var eventId = req.params.id;
+        var sId = req.body.user;
+        console.log(sId);
+
+        var attending = 1;
+
+        var haveData_1 = false;
+        var haveData_0 = false;
+        var NoData = false;
+
+        async.series([
+
+            function(callback){
+                attendeeModel.findAll({
+                    where: {
+                        eventId: eventId,
+                        attendeeId: sId,
+                    }
+                }) 
+                .then(attendChk => {
+                    if (attendChk.length > 0) {
+                        if (attendChk[0]['attending'] == 0) {
+                            haveData_1 = false;
+                            haveData_0 = true;
+                            NoData = false;
+                        } else{
+                            haveData_1 = true;
+                            haveData_0 = false;
+                            NoData = false;
+                        }
+                    } else {
+                        haveData_1 = false;
+                        haveData_0 = false;
+                        NoData = true;
+                    }
+                    callback(null,1);
+                });
+            }
+        ],
+
+        function(){
+            if (NoData) {
+                attendeeModel.create({
+                    eventId: eventId,
+                    attendeeId: sId,
+                    attending: attending
+                }).then(
+                    res.sendStatus(201)
+                );
+            } 
+            else if (haveData_0) {
+                attendeeModel.update(
+                    {attending: 1},
+                    {
+                    where: {
+                        eventId: eventId,
+                        attendeeId: sId
+                    }
+                }).then(
+                    res.sendStatus(201)
+                );
+            } 
+            else {
+                res.sendStatus(403)
+            }
+        });        
+            
+    });
+
+    api.post('/create', (req, res, err) => {
+        var userId = req.query.user;
+
+        eventModel.create({
+            title: req.body.title,
+            description: req.body.description,
+            hostId: userId,
+            venueId: req.body.venueId,
+            feeAmount: req.body.fee,
+            eventImages: req.body.photoUrl,
+            type: req.body.type,
+            seats: req.body.seats,
+            date: req.body.date
+        })
+        .then(
+            console.log(err)
+        )
+    });
+    
     return api;
 };

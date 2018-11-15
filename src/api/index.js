@@ -75,10 +75,10 @@ export default ({config, db, passport}) => {
     });
   });
 
-  api.use('/event', event({ config, db }));
+  api.use('/event', event({ config, db, passport }));
   api.use('/user', user({config, db, passport}));
   api.use('/venue', venue({config, db, passport}));
-
+  
   return api;
 };
   
