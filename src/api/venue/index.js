@@ -4,7 +4,6 @@ import event from '../../models/events';
 import venue from '../../models/venue';
 import users from '../../models/users';
 import attendees from '../../models/attendees'
-import upload from '../../lib/upload';
 
 export default ({config, db, passport}) => {
     let api = Router();
@@ -13,7 +12,6 @@ export default ({config, db, passport}) => {
         console.log(req.body);
         const venueModel = venue(db.sequelize, db.Sequelize);
         venueModel.create({
-            idx : "1",
             uniqueId : req.user.uniqueId,
             type : req.body.type,
             accomodate : req.body.accomodate,

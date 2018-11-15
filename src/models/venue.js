@@ -3,9 +3,10 @@
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('venue', {
     idx: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.INTEGER(11),
       allowNull: false,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     uniqueId: {
       type: DataTypes.STRING(45),

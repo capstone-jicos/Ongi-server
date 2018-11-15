@@ -8,13 +8,12 @@ import users from '../models/users';
 import credential from '../models/loginCredential';
 import timestamp from 'unix-timestamp';
 import async from 'async';
-import upload from '../lib/upload';
 
 export default ({config, db, passport}) => {
   let api = Router();
 
   // perhaps expose some API metadata at the root
-  api.get('/', upload(config), (req, res) => {
+  api.get('/', (req, res) => {
     console.log(req.fields);
     //res.json({version});
   });

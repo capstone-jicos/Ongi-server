@@ -4,7 +4,6 @@ import event from '../../models/events';
 import venue from '../../models/venue';
 import users from '../../models/users';
 import attendees from '../../models/attendees'
-import upload from '../../lib/upload';
 
 export default ({config, db, passport}) => {
     let api = Router();
