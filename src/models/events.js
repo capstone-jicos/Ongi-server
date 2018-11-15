@@ -38,6 +38,14 @@ module.exports = function(sequelize, DataTypes) {
     eventImages: {
       type: DataTypes.STRING(45),
       allowNull: false
+    },
+    type: {
+      type: DataTypes.STRING(45),
+      allowNull: false
+    },
+    seats: {
+      type: DataTypes.INTEGER(10),
+      allowNull: false
     }
   }, {
     timestamps: false,

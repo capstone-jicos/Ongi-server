@@ -19,7 +19,7 @@ export default ({config, db}) => {
     var eventIndex;
     var venueId;
 
-    var title,description,eventImage,remainingSeat;
+    var title,description,eventImage,seats,feeAmount;
 
     var locationName, locationAddress;
     var coordinates_lat, coordinates_lng;
@@ -138,7 +138,8 @@ export default ({config, db}) => {
                     description = event['description'];
                     hostId = event['hostId'];
                     venueId = event['venueId'];
-                    remainingSeat = event['feeAmount'];
+                    seats = event['seats'];
+                    feeAmount = event['feeAmount'];
                     eventImage = event['eventImage'];
 
                     if (hostId == usId) {
@@ -228,7 +229,8 @@ export default ({config, db}) => {
                     "name": providerName,
                     "profileImage": providerImage
                 },
-                "remainingSeat": remainingSeat,
+                "seats": seats,
+                "feeAmount": feeAmount,
                 "attendCheck": attendCheck,
                 "hostCheck": hostCheck
             };
@@ -361,6 +363,24 @@ export default ({config, db}) => {
             }
         });        
             
+    });
+
+    api.post('/create', (req, res) => {
+        var userId = req.params.user;
+
+        eventModel.create({
+            title: req.body.name,
+            description: req.body.description,
+            hostId: userId,
+            venueId: req.body.venueId,
+            feeAmount: req.body.fee,
+            eventImages: req.body.photoUrl,
+            type: req.body.type,
+            seats: req.body.seats
+        })
+        .then(
+            res.sendStatus()
+        )
     });
     
     return api;
