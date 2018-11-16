@@ -5,7 +5,8 @@ module.exports = function(sequelize, DataTypes) {
     idx: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     title: {
       type: DataTypes.STRING(64),
@@ -47,21 +48,13 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER(10),
       allowNull: false
     },
-    type: {
-      type: DataTypes.STRING(45),
-      allowNull: false
-    },
-    seats: {
-      type: DataTypes.INTEGER(10),
-      allowNull: false
-    },
     date: {
       type: DataTypes.STRING(45),
-      allowNull: false
+      allowNull: true
     }
   }, {
+    tableName: 'events',
     timestamps: false,
-    freezeTableName: true,
-    tableName: 'events'
+    freezeTableName: true
   });
 };

@@ -294,11 +294,10 @@ export default ({config, db}) => {
   
     // 모임 참가 신청
     // session ID 확인 필요
-    api.post('/:id/join', (req, res) => {
+    api.get('/:id/join', (req, res) => {
 
         var eventId = req.params.id;
-        var sId = req.body.user;
-        console.log(sId);
+        var sId = req.query.user;
 
         var attending = 1;
 
@@ -348,15 +347,17 @@ export default ({config, db}) => {
             } 
             else if (haveData_0) {
                 attendeeModel.update(
-                    {attending: 1},
+                    {attending: 2},
                     {
                     where: {
                         eventId: eventId,
                         attendeeId: sId
                     }
-                }).then(
-                    res.sendStatus(201)
-                );
+                }).then(() => {
+                    res.sendStatus(201);
+                }).catch(function(err){
+                    res.send(err);
+                });
             } 
             else {
                 res.sendStatus(403)
@@ -364,6 +365,27 @@ export default ({config, db}) => {
         });        
             
     });
+
+    api.get('/:id/cancel', (req, res) => {
+
+        var eventId = req.params.id;
+        var sId = req.query.user;
+
+        attendeeModel.update(
+            {attending: 0},
+            {
+            where: {
+                eventId: eventId,
+                attendeeId: sId
+            }
+        }).then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
+            
+    });
+
 
     api.post('/create', (req, res, err) => {
         var userId = req.query.user;
@@ -379,9 +401,11 @@ export default ({config, db}) => {
             seats: req.body.seats,
             date: req.body.date
         })
-        .then(
-            console.log(err)
-        )
+        .then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
     });
     
     return api;
