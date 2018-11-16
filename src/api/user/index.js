@@ -16,9 +16,6 @@ export default ({config, db}) => {
 
     var userId;
 
-    var hostListJson = {};
-    var hostListArr = [];
-
     api.get('/:id', function(req,res) {
 
         userId = req.params.id;
@@ -32,38 +29,99 @@ export default ({config, db}) => {
         });
     });
 
+    // 주최 리스트 보기
+    // 참가 대기중 수 보여주기
     api.get('/me/hosted', function(req,res) {  
                
         userId = req.query.user;
 
-        eventModel.findAll({
-            where: {
-                hostId: userId
-            }
-        })
-        .then(hostList => {
+        var hostListJson = {};
+        var hostListArr = [];
+        
+        var eventIndex = [];
+        var title = [];
+        var description = [];
+        var venueId = [];
+        var feeAmount = [];
+        var eventImages = [];
 
-            for(var i=0; i<hostList.length; i++) {
+        var eventIdNum = [];
+
+        async.series([
+            
+            function(callback) {
+                eventModel.findAll({
+                    where: {
+                        hostId: userId
+                    }
+                })
+                .then(hostList => {
+
+                    for(var i=0; i<hostList.length; i++) {
+                        console.log(hostList[i]['idx']);
+
+                        eventIndex[i] = hostList[i]['idx'];
+                        title[i] = hostList[i]['title'];
+                        description[i] = hostList[i]['description'];
+                        venueId[i] = hostList[i] ['venueId'];
+                        feeAmount[i] = hostList[i]['feeAmount'];
+                        eventImages[i] = hostList[i]['eventImages'];
+                    }          
+                    callback(null,1);
+                })        
+            },
+            function(callback) {
+                attendeeModel.findAll({
+                    where: {
+                        eventId: eventIndex,
+                        attending: 2
+                    }
+                })
+                .then(attendeeList => {
+                    for (var j=0; j<eventIndex.length; j++) {
+                        eventIdNum[j] = 0;
+                    }
+
+                    for (var i=0; i<attendeeList.length; i++) {
+
+                        for (var j=0; j<eventIndex.length; j++) {
+                            if (attendeeList[i]['eventId'] == eventIndex[j]) {
+                                eventIdNum[j]++;
+                                break;
+
+                            }
+
+                        }
+
+                    }
+                    callback(null,1);
+                })
+            }            
+        ],
+        function() {
+            for (var i=0; i<eventIndex.length; i++) {
+                
                 hostListJson = {
-                    "eventIndex": hostList[i]['idx'],
-                    "title": hostList[i]['title'],
-                    "description": hostList[i]['description'],
-                    "venueId": hostList[i] ['venueId'],
-                    "feeAmount": hostList[i]['feeAmount'],
-                    "eventImages": hostList[i]['eventImages']
+                    "eventIndex": eventIndex[i],
+                    "title": title[i],
+                    "description": description[i],
+                    "venueId": venueId[i],
+                    "feeAmount": feeAmount[i],
+                    "eventImages": eventImages[i],
+                    "holdNum": eventIdNum[i]
                 }
                 hostListArr[i] = hostListJson;
             }
             res.send(hostListArr);
-        })
+        });
+
+        
     });
 
     api.get('/me/hosted/:id', function(req,res) {
         var index = req.params.id;
         userId = req.query.user;
-        // return res.redirect('http://localhost:8080/event/'+index+'?user='+userId);
-        // return res.redirect('../event/'+index+'?user='+userId);
-        // 나중에 서버주소로
+        
     });
     
     api.get('/me/attended', function(req,res) {   
