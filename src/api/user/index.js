@@ -16,6 +16,8 @@ export default ({config, db}) => {
 
     var userId;
 
+    var eventIndexGlobal = [];
+
     api.get('/:id', function(req,res) {
 
         userId = req.params.id;
@@ -101,6 +103,8 @@ export default ({config, db}) => {
         function() {
             for (var i=0; i<eventIndex.length; i++) {
                 
+                eventIndexGlobal = eventIndex;
+                
                 hostListJson = {
                     "eventIndex": eventIndex[i],
                     "title": title[i],
@@ -119,8 +123,26 @@ export default ({config, db}) => {
     });
 
     api.get('/me/hosted/:id', function(req,res) {
-        var index = req.params.id;
-        userId = req.query.user;
+        var eventIndex = req.params.id;
+
+        attendeeModel.findAll({
+            where: {
+                eventId: eventIndex,
+                attending: 2
+            }
+        })
+        .then(attendeeList => {
+            var attendeeArr = [];
+            var attendeeJson = {};
+            for (var i=0; i<attendeeList.length; i++) {
+                attendeeJson = {
+                    "id": attendeeList[i]['attendeeId']
+                }
+                attendeeArr[i] = attendeeJson;
+            }
+            res.json(attendeeArr);
+        })
+
         
     });
     
