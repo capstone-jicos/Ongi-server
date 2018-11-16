@@ -49,7 +49,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false
     },
     date: {
-      type: DataTypes.STRING(45),
+      type: DataTypes.DATE,
       allowNull: true
     }
   }, {

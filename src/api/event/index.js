@@ -6,6 +6,8 @@ import attendees from '../../models/attendees'
 import sessionChecker from '../../session-checker';
 
 export default ({config, db}) => {
+    // timestamps: false,
+    // freezeTableName: true
     let api = Router();
 
     var async = require('async');
@@ -19,9 +21,9 @@ export default ({config, db}) => {
     var eventIndex;
     var venueId;
 
-    var title,description,eventImage,seats,feeAmount;
+    var title,description,eventImage,feeAmount,seats,type,date;
 
-    var locationName, locationAddress;
+    var locationName, locationCountry, locationState, locationCity, locationDetail;
     var coordinates_lat, coordinates_lng;
 
     var hostId, hostName, hostImage;
@@ -101,7 +103,7 @@ export default ({config, db}) => {
 
         eventIndex = req.params.id;
         var usId = req.query.user;
-        var attendCheck = false;
+        var attendCheck;
         var hostCheck = false;
 
         async.series([
@@ -111,14 +113,13 @@ export default ({config, db}) => {
                     where: {
                         eventId: eventIndex,
                         attendeeId: usId,
-                        attending: 1
                     }
                 })
                 .then(attendChk => {
                     if (attendChk.length > 0) {
-                        attendCheck = true;
+                        attendCheck = attendChk[0]['attending'];
                     } else{
-                        attendCheck = false;
+                        attendCheck = 0;
                     }
                     callback(null,1);
                 })
@@ -138,9 +139,11 @@ export default ({config, db}) => {
                     description = event['description'];
                     hostId = event['hostId'];
                     venueId = event['venueId'];
-                    seats = event['seats'];
                     feeAmount = event['feeAmount'];
                     eventImage = event['eventImage'];
+                    type = event['type'];
+                    seats = event['seats'];
+                    date = event['date'];
 
                     if (hostId == usId) {
                         hostCheck = true;
@@ -161,8 +164,11 @@ export default ({config, db}) => {
                     }
                 })
                 .then(venue => {      
-                    locationName = venue['detailAddress'];
-                    locationAddress = venue['country'] + ' ' + venue['state'] + ' ' + venue['city'] + ' ' + venue['streetAddress'];
+                    locationName = venue['name'];
+                    locationCountry = venue['country'];
+                    locationState = venue['state'];
+                    locationCity = venue['city'];
+                    locationDetail = venue['detail'];
                     coordinates_lat = venue['lat'];
                     coordinates_lng = venue['lng'];
                     providerId = venue['uniqueId'];
@@ -212,7 +218,10 @@ export default ({config, db}) => {
                 "description": description,
                 "location": {
                     "name": locationName,
-                    "address": locationAddress,
+                    "country": locationCountry,
+                    "state": locationState,
+                    "city": locationCity,
+                    "detail": locationDetail,
                     "coordinates": {
                         "lat": coordinates_lat,
                         "lng": coordinates_lng
@@ -229,8 +238,10 @@ export default ({config, db}) => {
                     "name": providerName,
                     "profileImage": providerImage
                 },
-                "seats": seats,
                 "feeAmount": feeAmount,
+                "type": type,
+                "seats": seats,
+                "date": date,                
                 "attendCheck": attendCheck,
                 "hostCheck": hostCheck
             };
