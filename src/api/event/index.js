@@ -6,6 +6,8 @@ import attendees from '../../models/attendees'
 import sessionChecker from '../../session-checker';
 
 export default ({config, db}) => {
+    // timestamps: false,
+    // freezeTableName: true
     let api = Router();
 
     var async = require('async');
@@ -19,9 +21,9 @@ export default ({config, db}) => {
     var eventIndex;
     var venueId;
 
-    var title,description,eventImage,seats,feeAmount;
+    var title,description,eventImage,feeAmount,seats,type,date;
 
-    var locationName, locationAddress;
+    var locationName, locationCountry, locationState, locationCity, locationDetail;
     var coordinates_lat, coordinates_lng;
 
     var hostId, hostName, hostImage;
@@ -101,7 +103,7 @@ export default ({config, db}) => {
 
         eventIndex = req.params.id;
         var usId = req.query.user;
-        var attendCheck = false;
+        var attendCheck;
         var hostCheck = false;
 
         async.series([
@@ -111,14 +113,13 @@ export default ({config, db}) => {
                     where: {
                         eventId: eventIndex,
                         attendeeId: usId,
-                        attending: 1
                     }
                 })
                 .then(attendChk => {
                     if (attendChk.length > 0) {
-                        attendCheck = true;
+                        attendCheck = attendChk[0]['attending'];
                     } else{
-                        attendCheck = false;
+                        attendCheck = 0;
                     }
                     callback(null,1);
                 })
@@ -138,9 +139,11 @@ export default ({config, db}) => {
                     description = event['description'];
                     hostId = event['hostId'];
                     venueId = event['venueId'];
-                    seats = event['seats'];
                     feeAmount = event['feeAmount'];
                     eventImage = event['eventImage'];
+                    type = event['type'];
+                    seats = event['seats'];
+                    date = event['date'];
 
                     if (hostId == usId) {
                         hostCheck = true;
@@ -161,8 +164,11 @@ export default ({config, db}) => {
                     }
                 })
                 .then(venue => {      
-                    locationName = venue['detailAddress'];
-                    locationAddress = venue['country'] + ' ' + venue['state'] + ' ' + venue['city'] + ' ' + venue['streetAddress'];
+                    locationName = venue['name'];
+                    locationCountry = venue['country'];
+                    locationState = venue['state'];
+                    locationCity = venue['city'];
+                    locationDetail = venue['detail'];
                     coordinates_lat = venue['lat'];
                     coordinates_lng = venue['lng'];
                     providerId = venue['uniqueId'];
@@ -212,7 +218,10 @@ export default ({config, db}) => {
                 "description": description,
                 "location": {
                     "name": locationName,
-                    "address": locationAddress,
+                    "country": locationCountry,
+                    "state": locationState,
+                    "city": locationCity,
+                    "detail": locationDetail,
                     "coordinates": {
                         "lat": coordinates_lat,
                         "lng": coordinates_lng
@@ -229,8 +238,10 @@ export default ({config, db}) => {
                     "name": providerName,
                     "profileImage": providerImage
                 },
-                "seats": seats,
                 "feeAmount": feeAmount,
+                "type": type,
+                "seats": seats,
+                "date": date,                
                 "attendCheck": attendCheck,
                 "hostCheck": hostCheck
             };
@@ -294,11 +305,10 @@ export default ({config, db}) => {
   
     // 모임 참가 신청
     // session ID 확인 필요
-    api.post('/:id/join', (req, res) => {
+    api.get('/:id/join', (req, res) => {
 
         var eventId = req.params.id;
-        var sId = req.body.user;
-        console.log(sId);
+        var sId = req.query.user;
 
         var attending = 1;
 
@@ -348,15 +358,17 @@ export default ({config, db}) => {
             } 
             else if (haveData_0) {
                 attendeeModel.update(
-                    {attending: 1},
+                    {attending: 2},
                     {
                     where: {
                         eventId: eventId,
                         attendeeId: sId
                     }
-                }).then(
-                    res.sendStatus(201)
-                );
+                }).then(() => {
+                    res.sendStatus(201);
+                }).catch(function(err){
+                    res.send(err);
+                });
             } 
             else {
                 res.sendStatus(403)
@@ -364,6 +376,27 @@ export default ({config, db}) => {
         });        
             
     });
+
+    api.get('/:id/cancel', (req, res) => {
+
+        var eventId = req.params.id;
+        var sId = req.query.user;
+
+        attendeeModel.update(
+            {attending: 0},
+            {
+            where: {
+                eventId: eventId,
+                attendeeId: sId
+            }
+        }).then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
+            
+    });
+
 
     api.post('/create', (req, res, err) => {
         var userId = req.query.user;
@@ -379,9 +412,11 @@ export default ({config, db}) => {
             seats: req.body.seats,
             date: req.body.date
         })
-        .then(
-            console.log(err)
-        )
+        .then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
     });
     
     return api;

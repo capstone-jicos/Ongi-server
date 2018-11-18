@@ -16,8 +16,8 @@ module.exports = function(sequelize, DataTypes) {
       }
     }
   }, {
+    tableName: 'paymentLog',
     timestamps: false,
-    freezeTableName: true,
-    tableName: 'paymentLog'
+    freezeTableName: true
   });
 };
