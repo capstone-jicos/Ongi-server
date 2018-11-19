@@ -18,12 +18,6 @@ export default ({config, db}) => {
 
     var eventIndexGlobal = [];
 
-    api.get('/:id', function(req,res) {
-
-        userId = req.params.id;
-
-    });
-
     api.get('/me', sessionChecker(), (req, res) => {
         const userModel = users(db.sequelize, db.Sequelize);
         userModel.findOne({where : {uniqueId : req.user.uniqueId}}).then(userData =>{
@@ -33,9 +27,9 @@ export default ({config, db}) => {
 
     // 주최 리스트 보기
     // 참가 대기중 수 보여주기
-    api.get('/me/hosted', function(req,res) {  
+    api.get('/me/hosted', sessionChecker(), function(req,res) {  
                
-        userId = req.query.user;
+        userId = req.user.uniqueId;
 
         var hostListJson = {};
         var hostListArr = [];
@@ -121,9 +115,9 @@ export default ({config, db}) => {
 
         
     });
-
-    api.get('/me/hosted/:id', function(req,res) {
-        var eventIndex = req.params.id;
+    //신청받는사람들 목록
+    api.get('/me/hosted/:id', sessionChecker(), function(req,res) {
+        var eventIndex = req.user.uniqueId;
 
         attendeeModel.findAll({
             where: {
@@ -146,12 +140,12 @@ export default ({config, db}) => {
         
     });
     
-    api.get('/me/attended', function(req,res) {   
+    api.get('/me/attended', sessionChecker(), function(req,res) {   
 
         var attendListJson = {};
         var attendListArr = [];
 
-        userId = req.query.user;
+        userId = req.user.uniqueId;
         
         attendeeModel.findAll({
             where: {

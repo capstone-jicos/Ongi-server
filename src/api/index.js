@@ -9,13 +9,14 @@ import credential from '../models/loginCredential';
 import timestamp from 'unix-timestamp';
 import async from 'async';
 import upload from '../lib/upload'
+import formidable from 'formidable';
 
 export default ({config, db, passport}) => {
   let api = Router();
 
-  api.post('/upload', upload({config}), (req,res) => {
-    console.log(req);
-  }); // req에 
+  api.post('/upload', [sessionChecker(), upload({config})], (req,res) => {
+    
+  });
 
   // perhaps expose some API metadata at the root
   api.get('/', (req, res) => {

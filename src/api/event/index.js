@@ -305,10 +305,10 @@ export default ({config, db}) => {
   
     // 모임 참가 신청
     // session ID 확인 필요
-    api.get('/:id/join', (req, res) => {
+    api.get('/:id/join', sessionChecker(), (req, res) => {
 
         var eventId = req.params.id;
-        var sId = req.query.user;
+        var sId = req.user.uniqueId;
 
         var attending = 1;
 
@@ -377,10 +377,10 @@ export default ({config, db}) => {
             
     });
 
-    api.get('/:id/cancel', (req, res) => {
+    api.get('/:id/cancel', sessionChecker(), (req, res) => {
 
         var eventId = req.params.id;
-        var sId = req.query.user;
+        var sId = req.user.uniqueId;
 
         attendeeModel.update(
             {attending: 0},
@@ -398,8 +398,8 @@ export default ({config, db}) => {
     });
 
 
-    api.post('/create', (req, res, err) => {
-        var userId = req.query.user;
+    api.post('/create', sessionChecker(), (req, res, err) => {
+        var userId = req.user.uniqueId;
 
         eventModel.create({
             title: req.body.title,
