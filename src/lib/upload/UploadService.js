@@ -30,12 +30,22 @@ Upload.formidable = function (req, callback) {
         callback('form.on(aborted)', null);
     });
 };
-Upload.s3 = function (files, callback) {
-    params.Key = 'test/'+files[0].name;
-    params.Body = require('fs').createReadStream(files[0].path);
-    s3.upload(params, function (err, result) {
-        callback(err, result);
-    });
+Upload.s3 = function (res, req, files, callback) {
+    if(!files[0]){
+        res.json({success:false, msg:'파일이 존재하지 않음'});
+       return callback(1, null);
+    }
+    else{
+        params.Key = 'test/'+files[0].name;
+        params.Body = require('fs').createReadStream(files[0].path);
+        s3.upload(params, function (err, result) {
+            
+            req.fileURL = result.Location;
+           
+            return callback(0,null);
+        });
+    }
+    
 };
 
 
