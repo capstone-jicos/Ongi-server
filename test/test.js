@@ -1,12 +1,11 @@
 var request = require('supertest');
-var Sequelize = require('Sequelize');
+var Sequelize = require('sequelize');
 var api = require('../src').default;
 var async = require('async');
 
 const sequelize = new Sequelize('ongi1', 'jicos', 'jicos1234!', {
     host : "jicos.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
     dialect : "mysql",
-    logging : false
 })
 
 describe('######API TEST######', ()=>{
@@ -88,7 +87,8 @@ describe('######API TEST######', ()=>{
                 done();
             });
     });
-    after(function(){
+
+    after(function(done){
         async.series([
             function(callback){
                 sequelize.query(
@@ -109,6 +109,7 @@ describe('######API TEST######', ()=>{
                 })
             }
         ], function(err, result){
+            done();
         });
     });
 
