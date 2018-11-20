@@ -86,9 +86,9 @@ export default ({config, db}) => {
 
                     for (var i=0; i<attendeeList.length; i++) {
 
-                        for (var j=0; j<eventIndex.length; j++) {
-                            if (attendeeList[i]['eventId'] == eventIndex[j]) {
-                                eventIdNum[j]++;
+                        for (var k=0; k<eventIndex.length; k++) {
+                            if (attendeeList[i]['eventId'] == eventIndex[k]) {
+                                eventIdNum[k]++;
                                 break;
 
                             }

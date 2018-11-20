@@ -19,8 +19,8 @@ export default ({config, db, passport}) => {
 
   // perhaps expose some API metadata at the root
   api.get('/', (req, res) => {
-    console.log(req.fields);
-    //res.json({version});
+    //console.log(req.fields);
+    res.json({version});
   });
 
   api.get('/logout', function(req, res){
@@ -74,7 +74,9 @@ export default ({config, db, passport}) => {
           },
         ], function(err, result){
           if(err) res.send(err)
-          else res.send(result)
+          else {
+            res.send(result);
+          }
         });
       }
     });
