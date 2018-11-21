@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({limit: config.bodyLimit}));
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(cors({origins: ["http://localhost:8081", "http://api.ongi.tk"]}));
+app.use(cors({origins: ["http://localhost:8081", "https://www.ongi.tk"]}));
 
 passport.serializeUser(function(user, done) {
   console.log(user);
