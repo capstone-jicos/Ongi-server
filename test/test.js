@@ -26,6 +26,7 @@ describe('####Before authenticating session####', ()=>{
             });
     });
     it('회원가입 가입 가능 POST /join', (done)=>{
+        this.timeout(10000);
         request(api)
             .post('/join')
             .send({userId:'test',
@@ -44,6 +45,7 @@ describe('####Before authenticating session####', ()=>{
             
     });
     it('회원가입 가입 불가능 POST /join', (done)=>{
+        this.timeout(10000);
         request(api)
             .post('/join')
             .send({userId:'test',
@@ -110,6 +112,7 @@ describe('####After authenticating session####', ()=>{
     });
 
     it('my page init GET /user/me', (done) =>{
+        this.timeout(10000);
         authenticatedSession.get('/user/me')
             .expect(200)
             .end(function(err, res){
