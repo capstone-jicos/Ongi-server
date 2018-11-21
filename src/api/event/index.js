@@ -4,6 +4,8 @@ import venue from '../../models/venue';
 import users from '../../models/users';
 import attendees from '../../models/attendees'
 import sessionChecker from '../../session-checker';
+import sessionCheckerEvent from '../../session-checker/event';
+import { isUndefined } from 'util';
 
 export default ({config, db}) => {
     // timestamps: false,
@@ -28,6 +30,8 @@ export default ({config, db}) => {
 
     var hostId, hostName, hostImage;
     var providerId,providerName,providerImage;
+
+    var sessionId;
 
 
     // 모임 검색
@@ -99,10 +103,11 @@ export default ({config, db}) => {
     });
     
     
-    api.get('/:id', function(req,res) {
+    api.get('/:id', sessionCheckerEvent(), function(req,res) {
 
         eventIndex = req.params.id;
-        var usId = req.query.user;
+        var usId = req.user.uniqueId;
+
         var attendCheck;
         var hostCheck = false;
 
@@ -134,13 +139,16 @@ export default ({config, db}) => {
                         idx: eventIndex
                     }
                 })
-                .then(event => {      
+                .then(event => {    
+                    if (event == undefined) {
+                        res.send({});
+                    } 
                     title = event['title'];
                     description = event['description'];
                     hostId = event['hostId'];
                     venueId = event['venueId'];
                     feeAmount = event['feeAmount'];
-                    eventImage = event['eventImage'];
+                    eventImage = event['eventImages'];
                     type = event['type'];
                     seats = event['seats'];
                     date = event['date'];
@@ -247,6 +255,7 @@ export default ({config, db}) => {
             };
             
             res.send(val);
+            
         }
         
         );
@@ -304,13 +313,12 @@ export default ({config, db}) => {
     });
   
     // 모임 참가 신청
-    // session ID 확인 필요
     api.get('/:id/join', sessionChecker(), (req, res) => {
 
         var eventId = req.params.id;
         var sId = req.user.uniqueId;
 
-        var attending = 1;
+        var attending = 2;
 
         var haveData_1 = false;
         var haveData_0 = false;

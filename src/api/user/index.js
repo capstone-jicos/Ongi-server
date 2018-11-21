@@ -13,13 +13,13 @@ export default ({config, db}) => {
     const eventModel = event(db.sequelize, db.Sequelize);
     const venueModel = venue(db.sequelize, db.Sequelize);
     const attendeeModel = attendees(db.sequelize, db.Sequelize);
+    const userModel = users(db.sequelize, db.Sequelize);
 
     var userId;
 
     var eventIndexGlobal = [];
 
     api.get('/me', sessionChecker(), (req, res) => {
-        const userModel = users(db.sequelize, db.Sequelize);
         userModel.findOne({where : {uniqueId : req.user.uniqueId}}).then(userData =>{
         res.send(userData);
         });
@@ -54,8 +54,6 @@ export default ({config, db}) => {
                 .then(hostList => {
 
                     for(var i=0; i<hostList.length; i++) {
-                        console.log(hostList[i]['idx']);
-
                         eventIndex[i] = hostList[i]['idx'];
                         title[i] = hostList[i]['title'];
                         description[i] = hostList[i]['description'];
@@ -77,9 +75,8 @@ export default ({config, db}) => {
                     for (var j=0; j<eventIndex.length; j++) {
                         eventIdNum[j] = 0;
                     }
-
+                    
                     for (var i=0; i<attendeeList.length; i++) {
-
                         for (var j=0; j<eventIndex.length; j++) {
                             if (attendeeList[i]['eventId'] == eventIndex[j]) {
                                 eventIdNum[j]++;
@@ -115,30 +112,96 @@ export default ({config, db}) => {
 
         
     });
-    //신청받는사람들 목록
-    api.get('/me/hosted/:id', sessionChecker(), function(req,res) {
-        var eventIndex = req.user.uniqueId;
 
-        attendeeModel.findAll({
+
+    // accept을 기다리는 hold list(id)
+    api.get('/me/hosted/:id', sessionChecker(), function(req,res) {
+        var eventIndex = req.params.id;
+
+        var attendeeArr = [];
+        var attendeeNameArr = [];
+
+        var attendeeJson = {};
+        var attendeeListArr = [];        
+        
+        async.series([
+
+            function(callback){
+                attendeeModel.findAll({
+                    where: {
+                        eventId: eventIndex,
+                        attending: 2
+                    }
+                })
+                .then(attendeeList => {
+
+                    if (attendeeList.length == 0){
+                        res.send({});
+                    }
+
+                    for (var i=0; i<attendeeList.length; i++) {
+                        attendeeArr[i] = attendeeList[i]['attendeeId'];
+                    }
+                    callback(null,1);
+                })        
+            },
+            function(callback) {
+                userModel.findAll({
+                    where: {
+                        uniqueId: attendeeArr
+                    }
+                })
+                .then(userList => {
+
+                    for (var i=0; i<userList.length; i++) {
+                        attendeeNameArr[i] = userList[i]['displayName'];
+                    }
+
+                    for (var i=0; i<attendeeArr.length; i++) {
+                        for (var j=0; j<userList.length; j++) {
+                            if (attendeeArr[j] == userList[i]['uniqueId']) {
+                                attendeeNameArr[i] = userList[j]['displayName'];
+                                break;
+                            }
+                        }
+                    }
+                    callback(null,1);
+                })
+            }
+            
+        ],
+        function() {
+            for (var i=0; i<attendeeArr.length; i++) {
+                
+                attendeeJson = {
+                    "attendeeId": attendeeArr[i],
+                    "attendeeName": attendeeNameArr[i]
+                }
+                attendeeListArr[i] = attendeeJson;
+            }
+            res.send(attendeeListArr);
+        });
+    });
+
+    // host가 참가자 accept
+    api.post('/me/hosted/:id/accepted', sessionChecker(), function(req,res) {
+        var eventIndex = req.params.id;
+        var uniqueAttendee = req.body.attendeeId;
+    
+        attendeeModel.update(
+            {attending: 1},
+            {
             where: {
                 eventId: eventIndex,
-                attending: 2
+                attendeeId: uniqueAttendee
             }
-        })
-        .then(attendeeList => {
-            var attendeeArr = [];
-            var attendeeJson = {};
-            for (var i=0; i<attendeeList.length; i++) {
-                attendeeJson = {
-                    "id": attendeeList[i]['attendeeId']
-                }
-                attendeeArr[i] = attendeeJson;
-            }
-            res.json(attendeeArr);
-        })
-
-        
+        }).then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
     });
+
     
     api.get('/me/attended', sessionChecker(), function(req,res) {   
 
@@ -146,6 +209,7 @@ export default ({config, db}) => {
         var attendListArr = [];
 
         userId = req.user.uniqueId;
+
         
         attendeeModel.findAll({
             where: {
