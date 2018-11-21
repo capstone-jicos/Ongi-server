@@ -6,4 +6,4 @@ node_js:
 install:
 - npm install
 script:
-- ./node_modules/mocha/bin/mocha --exit --compilers js:babel-core/register
+- NODE_ENV=test mocha --exit --compilers js:babel-core/register
