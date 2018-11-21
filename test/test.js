@@ -15,7 +15,7 @@ beforeEach(function (){
 })
 describe('####Before authenticating session####', ()=>{
 
-    it('루트 디렉토리 GET / ', (done)=>{
+    it('루트 디렉토리 GET / ', function(done){
         request(api)
             .get('/')
             .expect('Content-Type', /json/)
@@ -25,7 +25,7 @@ describe('####Before authenticating session####', ()=>{
                 done();
             });
     });
-    it('회원가입 가입 가능 POST /join', (done)=>{
+    it('회원가입 가입 가능 POST /join', function(done){
         this.timeout(10000);
         request(api)
             .post('/join')
@@ -44,7 +44,7 @@ describe('####Before authenticating session####', ()=>{
             });
             
     });
-    it('회원가입 가입 불가능 POST /join', (done)=>{
+    it('회원가입 가입 불가능 POST /join', function(done){
         this.timeout(10000);
         request(api)
             .post('/join')
@@ -62,7 +62,7 @@ describe('####Before authenticating session####', ()=>{
                 done();
             });
     });
-    it('로그인 비밀번호 틀림 POST /login', (done)=>{
+    it('로그인 비밀번호 틀림 POST /login', function(done){
         request(api)
             .post('/login')
             .send({userId:'test',
@@ -73,7 +73,7 @@ describe('####Before authenticating session####', ()=>{
                 done();
             });
     });
-    it('로그인 아이디 틀림 POST /login', (done)=>{
+    it('로그인 아이디 틀림 POST /login', function(done){
         request(api)
             .post('/login')
             .send({userId:'login',
@@ -84,7 +84,7 @@ describe('####Before authenticating session####', ()=>{
                 done();
             });
     });
-    it('로그인 성공 POST /login', (done)=>{
+    it('로그인 성공 POST /login', function(done){
         request(api)
             .post('/login')
             .send({userId:'test',
@@ -97,7 +97,7 @@ describe('####Before authenticating session####', ()=>{
     });
 });
 
-describe('####After authenticating session####', ()=>{
+describe('####After authenticating session####', function(){
     var authenticatedSession;
 
     before(function(done) {
@@ -111,7 +111,7 @@ describe('####After authenticating session####', ()=>{
             });
     });
 
-    it('my page init GET /user/me', (done) =>{
+    it('my page init GET /user/me', function(done){
         this.timeout(10000);
         authenticatedSession.get('/user/me')
             .expect(200)
