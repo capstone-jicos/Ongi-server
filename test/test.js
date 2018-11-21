@@ -2,11 +2,6 @@ var request = require('supertest');
 var Sequelize = require('sequelize');
 var api = require('../src').default;
 var async = require('async');
-var register = require('babel-register');
-
-register({
-    ignore: /node_modules\/(?!ptz-core-domain)/,
-});
 
 const sequelize = new Sequelize('ongi1', 'jicos', 'jicos1234!', {
     host : "jicos.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
