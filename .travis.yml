@@ -5,5 +5,7 @@ node_js:
 - "8.12"
 install:
 - npm install
+before_script:
+- mysql -e "create database ongi1" -u root
 script:
 - NODE_ENV=test mocha --exit --compilers js:babel-core/register
