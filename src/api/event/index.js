@@ -4,6 +4,7 @@ import venue from '../../models/venue';
 import users from '../../models/users';
 import attendees from '../../models/attendees'
 import sessionChecker from '../../session-checker';
+import sessionCheckerEvent from '../../session-checker/event';
 import { isUndefined } from 'util';
 
 export default ({config, db}) => {
@@ -29,6 +30,8 @@ export default ({config, db}) => {
 
     var hostId, hostName, hostImage;
     var providerId,providerName,providerImage;
+
+    var sessionId;
 
 
     // 모임 검색
@@ -100,10 +103,11 @@ export default ({config, db}) => {
     });
     
     
-    api.get('/:id', function(req,res) {
+    api.get('/:id', sessionCheckerEvent(), function(req,res) {
 
         eventIndex = req.params.id;
-        var usId = req.query.user;
+        var usId = req.user.uniqueId;
+
         var attendCheck;
         var hostCheck = false;
 
@@ -309,13 +313,12 @@ export default ({config, db}) => {
     });
   
     // 모임 참가 신청
-    // session ID 확인 필요
     api.get('/:id/join', sessionChecker(), (req, res) => {
 
         var eventId = req.params.id;
         var sId = req.user.uniqueId;
 
-        var attending = 1;
+        var attending = 2;
 
         var haveData_1 = false;
         var haveData_0 = false;
@@ -413,7 +416,7 @@ export default ({config, db}) => {
             venueId: req.body.venueId,
             feeAmount: req.body.fee,
             eventImages: req.body.photoUrl,
-            type: encodeURIComponent(JSON.stringify(req.body.type)),
+            type: req.body.type,
             seats: req.body.seats,
             date: req.body.date
         })
