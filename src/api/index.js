@@ -15,7 +15,8 @@ export default ({config, db, passport}) => {
   let api = Router();
 
   api.post('/upload', [sessionChecker(), upload({config})], (req,res) => {
-    
+    console.log(req.photoUrl);
+    res.json({photoUrl:req.photoUrl})
   });
 
   // perhaps expose some API metadata at the root

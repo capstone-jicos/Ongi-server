@@ -22,10 +22,11 @@ export default({config}) =>{
 
         async.waterfall(tasks, function (err, result) {
             if(!err){
-                res.json({success:true, msg:'업로드 성공'})
+                // res.json({success:true, msg:'업로드 성공'})
                 next()
             }else{
-                res.json({success:false, msg:'실패', err:err})
+                res.status(401)
+                res.json({msg:'실패', err:err})
                 next()
             }
         });
