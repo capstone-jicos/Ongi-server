@@ -3,12 +3,8 @@ var Sequelize = require('sequelize');
 var api = require('../src').default;
 var async = require('async');
 
-const sequelize = new Sequelize('ongi1', 'jicos', 'jicos1234!', {
-    host : "jicos.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
-    dialect : "mysql",
-})
-
 describe('######API TEST######', ()=>{
+
     it('루트 디렉토리 GET / ', (done)=>{
         request(api)
             .get('/')
@@ -89,6 +85,11 @@ describe('######API TEST######', ()=>{
     });
 
     after(function(done){
+        const sequelize = new Sequelize('ongi1', 'jicos', 'jicos1234!', {
+            host : "jicos.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
+            dialect : "mysql",
+            logging : false
+        }).then(done());
         async.series([
             function(callback){
                 sequelize.query(

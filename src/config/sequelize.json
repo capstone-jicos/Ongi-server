@@ -7,10 +7,10 @@
     "dialect": "mysql"
   },
   "test": {
-    "username": "root",
-    "password": null,
+    "username": "jicos",
+    "password": "jicos1234!",
     "database": "ongi1",
-    "host": "127.0.0.1",
+    "host": "jicos.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
     "dialect": "mysql",
     "logging": false
   },
