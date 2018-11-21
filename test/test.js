@@ -1,9 +1,19 @@
 var request = require('supertest');
 var Sequelize = require('sequelize');
+var session = require('supertest-session');
 var api = require('../src').default;
 var async = require('async');
 
-describe('######API TEST######', ()=>{
+const sequelize = new Sequelize('ongi_test', 'jicos', 'jicos1234!', {
+    host : "testcode.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
+    dialect : "mysql",
+    logging : false
+});
+var testSession = null;
+beforeEach(function (){
+    testSession = session(api);
+})
+describe('####Before authenticating session####', ()=>{
 
     it('루트 디렉토리 GET / ', (done)=>{
         request(api)
@@ -83,13 +93,34 @@ describe('######API TEST######', ()=>{
                 done();
             });
     });
+});
+
+describe('####After authenticating session####', ()=>{
+    var authenticatedSession;
+
+    before(function(done) {
+        testSession.post('/login')
+            .send({userId:'test', accessToken:'test'})
+            .expect(200)
+            .end(function(err){
+                if(err) return done(err);
+                authenticatedSession = testSession;
+                return done();
+            });
+    });
+
+    it('my page init GET /user/me', (done) =>{
+        authenticatedSession.get('/user/me')
+            .expect(200)
+            .end(function(err, res){
+                if(err) return done(err);
+                console.log(res.body);
+                done();
+            })
+    })
 
     after(function(done){
-        const sequelize = new Sequelize('ongi1', 'jicos', 'jicos1234!', {
-            host : "jicos.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
-            dialect : "mysql",
-            logging : false
-        }).then(done());
+        
         async.series([
             function(callback){
                 sequelize.query(

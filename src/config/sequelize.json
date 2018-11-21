@@ -9,8 +9,8 @@
   "test": {
     "username": "jicos",
     "password": "jicos1234!",
-    "database": "ongi1",
-    "host": "jicos.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
+    "database": "ongi_test",
+    "host": "testcode.cnxzzmk64bfy.ap-northeast-2.rds.amazonaws.com",
     "dialect": "mysql",
     "logging": false
   },
