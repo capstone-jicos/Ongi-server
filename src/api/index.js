@@ -13,8 +13,9 @@ import upload from '../lib/upload'
 export default ({config, db, passport}) => {
   let api = Router();
 
-  api.post('/upload', upload({config}), (req,res) => {
-    console.log(req);
+  api.post('/upload', [sessionChecker(), upload({config})], (req,res) => {
+    console.log(req.photoUrl);
+    res.json({photoUrl:req.photoUrl})
   }); // req에 
 
   // perhaps expose some API metadata at the root
