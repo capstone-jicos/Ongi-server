@@ -165,29 +165,38 @@ export default ({config, db}) => {
         })
     });
 
-    api.get('/me/venue', function(req,res) {   
+    api.get('/me/venue', sessionChecker(), (req,res) => {   
 
         var venueListJson = {};
         var venueListArr = [];
-
-        userId = req.query.user;
         
         venueModel.findAll({
             where: {
-                uniqueId: userId
+                uniqueId: req.user.uniqueId
             }
         })
         .then(venueList => {
 
             for (var i=0; i<venueList.length; i++){
-                venueListJson = {
-                    "venueIndex": venueList[i]['idx'],
-                    "country": venueList[i]['country'],
-                    "city": venueList[i]['state'] + " " + venueList[i]['city'],
-                    "locationAddress": venueList[i]['streetAddress'],
-                    "locationName": venueList[i]['detailAddress'],
-                    "coordinates_lat": venueList[i]['lat'],
-                    "coordinates_lng": venueList[i]['lng']
+                venueListJson = {                        
+                    "venue":{
+                            "name":venueList[i]['name'],
+                            "type": venueList[i]['type'],
+                            "amenities": venueList[i]['amenities'],
+                            "rules": venueList[i]['rules'],
+                            "location": {                            
+                                "state":venueList[i]['state'],
+                                "city":venueList[i]['city'],
+                                "detail":venueList[i]['detail']
+                            },
+                            "coordinates:":{
+                                "lat": venueList[i]['lat'],
+                                "lng": venueList[i]['lng']
+                            },
+                            "people":venueList[i]['accomodate'],
+                            "fee":venueList[i]['fee'],
+                            "image":venueList[i]['photoUrl']                        
+                    }
                 }
                 venueListArr[i] = venueListJson;
             }
