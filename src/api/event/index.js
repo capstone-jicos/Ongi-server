@@ -4,6 +4,7 @@ import venue from '../../models/venue';
 import users from '../../models/users';
 import attendees from '../../models/attendees'
 import sessionChecker from '../../session-checker';
+import { isUndefined } from 'util';
 
 export default ({config, db}) => {
     // timestamps: false,
@@ -134,13 +135,16 @@ export default ({config, db}) => {
                         idx: eventIndex
                     }
                 })
-                .then(event => {      
+                .then(event => {    
+                    if (event == undefined) {
+                        res.send({});
+                    } 
                     title = event['title'];
                     description = event['description'];
                     hostId = event['hostId'];
                     venueId = event['venueId'];
                     feeAmount = event['feeAmount'];
-                    eventImage = event['eventImage'];
+                    eventImage = event['eventImages'];
                     type = event['type'];
                     seats = event['seats'];
                     date = event['date'];
@@ -247,6 +251,7 @@ export default ({config, db}) => {
             };
             
             res.send(val);
+            
         }
         
         );
@@ -408,7 +413,7 @@ export default ({config, db}) => {
             venueId: req.body.venueId,
             feeAmount: req.body.fee,
             eventImages: req.body.photoUrl,
-            type: req.body.type,
+            type: encodeURIComponent(JSON.stringify(req.body.type)),
             seats: req.body.seats,
             date: req.body.date
         })
