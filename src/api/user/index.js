@@ -179,24 +179,10 @@ export default ({config, db}) => {
 
             for (var i=0; i<venueList.length; i++){
                 venueListJson = {                        
-                    "venue":{
-                            "name":venueList[i]['name'],
-                            "type": venueList[i]['type'],
-                            "amenities": venueList[i]['amenities'],
-                            "rules": venueList[i]['rules'],
-                            "location": {                            
-                                "state":venueList[i]['state'],
-                                "city":venueList[i]['city'],
-                                "detail":venueList[i]['detail']
-                            },
-                            "coordinates:":{
-                                "lat": venueList[i]['lat'],
-                                "lng": venueList[i]['lng']
-                            },
-                            "people":venueList[i]['accomodate'],
-                            "fee":venueList[i]['fee'],
-                            "image":venueList[i]['photoUrl']                        
-                    }
+                    "venueId":venueList[i]['idx'],
+                    "name": venueList[i]['name'],
+                    "address": venueList[i]['state'] +" "+ venueList[i]['city']+" "+ venueList[i]['detail'],
+                    "photoUrl":venueList[i]['photoUrl']
                 }
                 venueListArr[i] = venueListJson;
             }
