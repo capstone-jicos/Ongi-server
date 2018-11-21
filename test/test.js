@@ -123,7 +123,7 @@ describe('####After authenticating session####', function(){
     })
 
     after(function(done){
-        
+        this.timeout(10000);
         async.series([
             function(callback){
                 sequelize.query(
