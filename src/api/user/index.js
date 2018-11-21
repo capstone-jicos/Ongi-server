@@ -18,12 +18,6 @@ export default ({config, db}) => {
 
     var eventIndexGlobal = [];
 
-    api.get('/:id', function(req,res) {
-
-        userId = req.params.id;
-
-    });
-
     api.get('/me', sessionChecker(), (req, res) => {
         const userModel = users(db.sequelize, db.Sequelize);
         userModel.findOne({where : {uniqueId : req.user.uniqueId}}).then(userData =>{
