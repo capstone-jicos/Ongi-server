@@ -22,7 +22,7 @@ export default ({config, db}) => {
     var eventIndex;
     var venueId;
 
-    var title,description,eventImage,feeAmount,seats,type,date;
+    var title,description,eventImage,feeAmount,seats,type,startDate,endDate;
 
     var locationName, locationCountry, locationState, locationCity, locationDetail;
     var coordinates_lat, coordinates_lng;
@@ -157,7 +157,8 @@ export default ({config, db}) => {
                     eventImage = event['eventImages'];
                     type = event['type'];
                     seats = event['seats'];
-                    date = event['date'];
+                    startDate = event['startDate'];
+                    endDate = event['endDate'];
 
                     if (hostId == usId) {
                         hostCheck = true;
@@ -255,7 +256,8 @@ export default ({config, db}) => {
                 "feeAmount": feeAmount,
                 "type": type,
                 "seats": seats,
-                "date": date,                
+                "startDate": startDate,                
+                "endDate": endDate,
                 "attendCheck": attendCheck,
                 "hostCheck": hostCheck
             };
@@ -433,6 +435,8 @@ export default ({config, db}) => {
         });
     });
     
+
+    // upsert
     api.post('/:id/modify', sessionChecker(), (req, res, err) => {
         var eventId = req.params.id;
         var userId = req.user.uniqueId;
