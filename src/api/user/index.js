@@ -161,14 +161,9 @@ export default ({config, db}) => {
                     }
                 })
                 .then(userList => {
-
-                    for (var i=0; i<userList.length; i++) {
-                        attendeeNameArr[i] = userList[i]['displayName'];
-                    }
-
                     for (var i=0; i<attendeeArr.length; i++) {
                         for (var j=0; j<userList.length; j++) {
-                            if (attendeeArr[j] == userList[i]['uniqueId']) {
+                            if (attendeeArr[i] == userList[j]['uniqueId']) {
                                 attendeeNameArr[i] = userList[j]['displayName'];
                                 break;
                             }
@@ -233,28 +228,159 @@ export default ({config, db}) => {
 
     api.get('/me/attended', sessionChecker(), function(req,res) {   
 
+        var eventIdArr = [];
+        var eventIdHoldArr = [];
+
+        var attendTitle = [];
+        var attendType = [];
+        var attendImage = [];
+        var attendSeats = [];
+        var attendSDate = [];
+        var attendEDate = [];
+        var attendHost = [];
+        
+        var hostName = [];
+        var hostImage = [];
+
         var attendListJson = {};
         var attendListArr = [];
 
         userId = req.user.uniqueId;
 
-        
-        attendeeModel.findAll({
-            where: {
-                attendeeId: userId,
-                attending: 1
-            }
-        })
-        .then(attendList => {
+        async.series([
+            function(callback) {
+                attendeeModel.findAll({
+                    where: {
+                        attendeeId: userId,
+                        attending: 1
+                    }
+                })
+                .then(attendList => {
+                    for (var i=0; i<attendList.length; i++){
+                        eventIdArr[i] = attendList[i]["eventId"];                        
+                    }
+                    callback(null,1);
+                })
+            },
+            function(callback) {
+                attendeeModel.findAll({
+                    where: {
+                        attendeeId: userId,
+                        attending: 2
+                    }
+                })
+                .then(attendList => {
+                    for (var i=0; i<attendList.length; i++){
+                        eventIdHoldArr[i] = attendList[i]["eventId"];                        
+                    }
+                    callback(null,1);
+                })
+            },
+            function(callback) {
+                eventModel.findAll({
+                    where: {
+                        idx: eventIdArr
+                    }
+                })
+                .then(hostList => {
+                    for (var i=0; i<eventIdArr.length; i++) {
+                        for (var j=0; j<hostList.length; j++) {
+                            if (eventIdArr[i] == hostList[j]['idx']) {
+                                attendTitle[i] = hostList[j]['title'];
+                                attendType[i] = hostList[j]['type'];
+                                attendImage[i] = hostList[j]['eventImages'];
+                                attendSeats[i] = hostList[j]['seats'];
+                                attendSDate[i] = hostList[j]['startDate'];
+                                attendEDate[i] = hostList[j]['endDate'];
+                                attendHost[i] = hostList[j]['hostId'];
+                                break;
+                            }
+                        }
+                    }        
+                    callback(null,1);
+                })
+            },
+            function(callback) {
+                eventModel.findAll({
+                    where: {
+                        idx: eventIdHoldArr
+                    }
+                })
+                .then(holdList => {
+                    var len = eventIdArr.length;
+                    for (var i=0; i<eventIdHoldArr.length; i++) {
+                        for (var j=0; j<holdList.length; j++) {
+                            if (eventIdHoldArr[i] == holdList[j]['idx']) {
+                                attendTitle[i+len] = holdList[j]['title'];
+                                attendType[i+len] = holdList[j]['type'];
+                                attendImage[i+len] = holdList[j]['eventImages'];
+                                attendSeats[i+len] = holdList[j]['seats'];
+                                attendSDate[i+len] = holdList[j]['startDate'];
+                                attendEDate[i+len] = holdList[j]['endDate'];
+                                attendHost[i+len] = holdList[j]['hostId'];
+                                break;
+                            }
+                        }
+                    }        
+                    callback(null,1);
+                })
+            },
+            function(callback) {
+                userModel.findAll({
+                    where: {
+                        uniqueId: attendHost
+                    }
+                })
+                .then(hostInfo => {
+                    
+                    for (var i=0; i<attendHost.length; i++) {
+                        for (var j=0; j<hostInfo.length; j++) {
+                            if (attendHost[i] == hostInfo[j]['uniqueId']) {
+                                hostName[i] = hostInfo[j]['displayName'];
+                                hostImage[i] = hostInfo[j]['profileImage'];
 
-            for (var i=0; i<attendList.length; i++){
-                attendListJson = {
-                    "eventId": attendList[i]["eventId"]
+                                break;
+                            }
+                        }
+                    }        
+                    callback(null,1);
+                })
+            }
+        ],
+        function() {
+            for (var i=0; i<eventIdArr.length + eventIdHoldArr.length; i++) {
+                
+                if (i < eventIdArr.length) {
+                    attendListJson = {
+                        "eventIdx": eventIdArr[i],
+                        "title": attendTitle[i],
+                        "type": attendType[i],
+                        "image": attendImage[i],
+                        "seats": attendSeats[i],
+                        "startDate": attendSDate[i],
+                        "endDate": attendEDate[i],
+                        "status": true,
+                        "hostName": hostName[i],
+                        "hostImage": hostImage[i]
+                    }        
+                } else {
+                    attendListJson = {
+                        "eventIdx": eventIdHoldArr[i],
+                        "title": attendTitle[i],
+                        "type": attendType[i],
+                        "image": attendImage[i],
+                        "seats": attendSeats[i],
+                        "startDate": attendSDate[i],
+                        "endDate": attendEDate[i],
+                        "status": false,
+                        "hostName": hostName[i],
+                        "hostImage": hostImage[i]
+                    }
                 }
                 attendListArr[i] = attendListJson;
             }
             res.send(attendListArr);
-        })
+        });
     });
 
     api.get('/me/venue', function(req,res) {   
