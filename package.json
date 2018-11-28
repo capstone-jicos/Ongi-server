@@ -39,6 +39,7 @@
     "express": "^4.13.3",
     "express-session": "^1.15.6",
     "formidable": "^1.2.1",
+    "mongoose": "^5.3.13",
     "morgan": "^1.8.0",
     "mysql": "^2.16.0",
     "mysql2": "^1.6.1",
