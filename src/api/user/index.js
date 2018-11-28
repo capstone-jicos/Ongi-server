@@ -40,6 +40,9 @@ export default ({config, db}) => {
         var venueId = [];
         var feeAmount = [];
         var eventImages = [];
+        var type = [];
+        var startDate = [];
+        var endDate = [];
 
         var eventIdNum = [];
 
@@ -60,6 +63,9 @@ export default ({config, db}) => {
                         venueId[i] = hostList[i] ['venueId'];
                         feeAmount[i] = hostList[i]['feeAmount'];
                         eventImages[i] = hostList[i]['eventImages'];
+                        type[i] = hostList[i]['type'];
+                        startDate[i] = hostList[i]['startDate'];
+                        endDate[i] = hostList[i]['endDate'];
                     }          
                     callback(null,1);
                 })        
@@ -103,6 +109,9 @@ export default ({config, db}) => {
                     "venueId": venueId[i],
                     "feeAmount": feeAmount[i],
                     "eventImages": eventImages[i],
+                    "type": type[i],
+                    "startDate": startDate[i],                
+                    "endDate": endDate[i],
                     "holdNum": eventIdNum[i]
                 }
                 hostListArr[i] = hostListJson;
