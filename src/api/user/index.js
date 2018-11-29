@@ -129,6 +129,7 @@ export default ({config, db}) => {
 
         var attendeeArr = [];
         var attendeeNameArr = [];
+        var attendeeImageArr = [];
 
         var attendeeJson = {};
         var attendeeListArr = [];        
@@ -165,6 +166,7 @@ export default ({config, db}) => {
                         for (var j=0; j<userList.length; j++) {
                             if (attendeeArr[i] == userList[j]['uniqueId']) {
                                 attendeeNameArr[i] = userList[j]['displayName'];
+                                attendeeImageArr[i] = userList[j]['profileImage'];
                                 break;
                             }
                         }
@@ -179,7 +181,8 @@ export default ({config, db}) => {
                 
                 attendeeJson = {
                     "attendeeId": attendeeArr[i],
-                    "attendeeName": attendeeNameArr[i]
+                    "attendeeName": attendeeNameArr[i],
+                    "attendeeImage": attendeeImageArr[i]
                 }
                 attendeeListArr[i] = attendeeJson;
             }
