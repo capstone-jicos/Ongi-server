@@ -32,18 +32,20 @@ Upload.formidable = function (req, callback) {
 };
 Upload.s3 = function (res, req, files, callback) {
     if(!files[0]){
-        res.json({success:false, msg:'파일이 존재하지 않음'});
-       return callback(1, null);
+        res.status(401);
+        res.json({msg:'파일이 존재하지 않음'});
     }
     else{
-        params.Key = 'test/'+files[0].name;
+        console.log(files[0]);
+        params.Key = 'image/'+files[0].name;
         params.Body = require('fs').createReadStream(files[0].path);
         s3.upload(params, function (err, result) {
-            
-            req.fileURL = result.Location;
-           
+            req.photoUrl = "http://"+result.Bucket+"/"+result.Key;
+            res.status(200);
             return callback(0,null);
         });
+        
+       
     }
     
 };

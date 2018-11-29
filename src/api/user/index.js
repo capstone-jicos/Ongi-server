@@ -386,29 +386,24 @@ export default ({config, db}) => {
         });
     });
 
-    api.get('/me/venue', function(req,res) {   
+    api.get('/me/venue', sessionChecker(), (req,res) => {   
 
         var venueListJson = {};
         var venueListArr = [];
-
-        userId = req.query.user;
         
         venueModel.findAll({
             where: {
-                uniqueId: userId
+                uniqueId: req.user.uniqueId
             }
         })
         .then(venueList => {
 
             for (var i=0; i<venueList.length; i++){
-                venueListJson = {
-                    "venueIndex": venueList[i]['idx'],
-                    "country": venueList[i]['country'],
-                    "city": venueList[i]['state'] + " " + venueList[i]['city'],
-                    "locationAddress": venueList[i]['streetAddress'],
-                    "locationName": venueList[i]['detailAddress'],
-                    "coordinates_lat": venueList[i]['lat'],
-                    "coordinates_lng": venueList[i]['lng']
+                venueListJson = {                        
+                    "venueId":venueList[i]['idx'],
+                    "name": venueList[i]['name'],
+                    "address": venueList[i]['state'] +" "+ venueList[i]['city']+" "+ venueList[i]['detail'],
+                    "photoUrl":venueList[i]['photoUrl']
                 }
                 venueListArr[i] = venueListJson;
             }
