@@ -5,12 +5,14 @@ import venue from '../../models/venue';
 import users from '../../models/users';
 import attendees from '../../models/attendees';
 import timeTable from '../../models/venueTimeTable';
+import applyTable from '../../models/applyVenue';
 
 export default ({config, db, passport}) => {
     let api = Router();
     const Op = db.Sequelize.Op;
     const tableModel = timeTable(db.sequelize, db.Sequelize);
     const venueModel = venue(db.sequelize, db.Sequelize);
+    const applyModel = applyTable(db.sequelize, db.Sequelize);
     venueModel.hasMany(db.venueTimeTable, {foreignKey:'venueId', sourceKey:'idx'});
     tableModel.belongsTo(db.venue, {foreignKey:'venueId', targetKey:'idx'});
 
@@ -39,29 +41,89 @@ export default ({config, db, passport}) => {
     });
 
     api.get('/list', (req, res) =>{
-        
-        tableModel.findAll({where : {
-            [Op.or]:[{
-                startDate:{
-                    [Op.lt]:Date(req.params.startDate)
-                },
-                endDate:{
-                    [Op.lt]:Date(req.params.startDate)
-                }
-            },{
-                startDate:{
-                    [Op.gt]:Date(req.params.endDate)
-                },
-                endDate:{
-                    [Op.gt]:Date(req.params.endDate)
-                }                
+        venueModel.findAll({where:{
+            accomodate :{
+                [Op.gt] : req.query.seats
             }
-            ]            
-        }, include : [{model: venueModel, required : true}]})
-        .then(result =>{
-            res.send(result);
+        },  
+            include : [{model: tableModel, required : false}]
+        }).then(result =>{
+            result = JSON.stringify(result);
+            result = JSON.parse(result);
+            var list = new Array();
+            for(var searchLen = 0; searchLen < Object.keys(result).length; searchLen++){
+                var eachVenue = new Object();
+                var table = new Object();
+                eachVenue = JSON.stringify(result[searchLen]);
+                eachVenue = JSON.parse(eachVenue);
+                table = eachVenue.venueTimeTables;
+                var errstat = 0;
+                for(var tableLen = 0; tableLen < Object.keys(table).length; tableLen++){
+                    if(table[tableLen].startDate > req.query.startDate){
+                        if(table[tableLen].startDate < req.query.endDate){
+                            errstat = 1;
+                            continue;
+                        }
+                    }
+                    if(table[tableLen].startDate < req.query.startDate && table[tableLen].endDate > req.query.startDate){
+                        errstat = 1;
+                        continue;
+                    }
+                }
+                if(errstat) continue;
+                else list.push(eachVenue);
+            }
+            res.send(list);
         })
     })
 
+    api.get('/infor/:id', (req, res) =>{
+        var venueId = req.params.id;
+        venueModel.findOne({where : {idx : venueId}, include : [{model:tableModel, required : false}]}).then(result =>{
+            res.send(result);
+        })
+    });
+
+    api.get('/apply/:id', sessionChecker(), (req, res) =>{
+        var venueId = req.params.id;
+        venueModel.findOne({where:{
+            idx : venueId
+        },  
+            include : [{model: tableModel, required : false}]
+        }).then(result =>{
+            result = JSON.stringify(result);
+            result = JSON.parse(result);
+            var list = new Array();
+            for(var searchLen = 0; searchLen < Object.keys(result).length; searchLen++){
+                var eachVenue = new Object();
+                var table = new Object();
+                eachVenue = JSON.stringify(result[searchLen]);
+                eachVenue = JSON.parse(eachVenue);
+                table = eachVenue.venueTimeTables;
+                var errstat = 0;
+                for(var tableLen = 0; tableLen < Object.keys(table).length; tableLen++){
+                    if(table[tableLen].startDate > req.query.startDate){
+                        if(table[tableLen].startDate < req.query.endDate){
+                            errstat = 1;
+                            continue;
+                        }
+                    }
+                    if(table[tableLen].startDate < req.query.startDate && table[tableLen].endDate > req.query.startDate){
+                        errstat = 1;
+                        continue;
+                    }
+                }
+                if(errstat) res.sendStatus(412);
+                else {
+                    applyModel.create({
+                        venueId : venueId
+                    })
+                }
+            }
+        })
+    });
+
     return api;
 };
+
+
