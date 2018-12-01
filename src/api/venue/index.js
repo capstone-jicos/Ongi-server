@@ -83,9 +83,11 @@ export default ({config, db, passport}) => {
             res.send(result);
         })
     });
-
-    api.get('/apply/:id', sessionChecker(), (req, res) =>{
-        var venueId = req.params.id;
+    
+    //venueId가 parameter로 넘어와야함
+    api.get('/apply', sessionChecker(), (req, res) =>{
+        var venueId = req.query.venueId;
+        var eventId = req.query.eventId;
         venueModel.findOne({where:{
             idx : venueId
         },  
@@ -99,6 +101,7 @@ export default ({config, db, passport}) => {
                 var table = new Object();
                 eachVenue = JSON.stringify(result[searchLen]);
                 eachVenue = JSON.parse(eachVenue);
+                providerId = eachVenue.uniqueId;
                 table = eachVenue.venueTimeTables;
                 var errstat = 0;
                 for(var tableLen = 0; tableLen < Object.keys(table).length; tableLen++){
@@ -116,12 +119,33 @@ export default ({config, db, passport}) => {
                 if(errstat) res.sendStatus(412);
                 else {
                     applyModel.create({
-                        venueId : venueId
+                        venueId : venueId,
+                        eventId : eventId,
+                        status : 1,
+                        hostId : req.user.uniqueId,
+                        providerId : providerId
+                    }).then(result2 =>{
+                        //TODO: front에서 어떻게처리하는지에따라 달라질듯.
                     })
                 }
             }
         })
     });
+
+    api.get('/acceptList', sessionChecker(), (req, res) =>{
+        var userId = req.user.uniqueId;
+        applyModel.findAll({
+            where : {
+                providerId : userId,
+                status : 1
+        }}).then(result => {
+                //TODO : applyVenue에서 삭제를 하고 event에 해당 event 내용을 update
+        }).catch(function(err){
+            res.send(err);
+        });
+    });
+
+    
 
     return api;
 };

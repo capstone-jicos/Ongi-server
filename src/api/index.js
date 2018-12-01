@@ -9,6 +9,7 @@ import credential from '../models/loginCredential';
 import timestamp from 'unix-timestamp';
 import async from 'async';
 import upload from '../lib/upload';
+import payments from '../lib/payments';
 
 export default ({config, db, passport}) => {
   let api = Router();
@@ -16,6 +17,28 @@ export default ({config, db, passport}) => {
     console.log(req.photoUrl);
     res.json({photoUrl:req.photoUrl})
   });
+
+  api.post('/payments', payments({config}), (req,res) =>{
+    // const { Iamporter, IamporterError} = require('iamporter');
+    // const iamporter = new Iamporter({apiKey: '2310553183193708', secret:'KieoPcd7xp94YwgNUrLf9N7ygHqoDKAn2PMR10Zyq9DoGTbAkXPuLW31EupieZFgPs8Qs7pSg2hWVtwg'});
+
+    // iamporter.payOnetime({
+    //     merchant_uid:'merchant_133',
+    //     amount:'100',
+    //     card_number:'4619-5410-0544-1876',
+    //     expiry:'2023-07',
+    //     birth:'960320',
+    //     pwd_2digit:'74'
+    // }).then(result => {
+    //     res.send(result);
+    //     res.sendStatus(200);
+    // }).catch((err) => {
+    //   if(err instanceof IamporterError){
+    //     res.send(err.raw);
+    //   }
+    // })
+    res.send(200);
+  })
 
   // perhaps expose some API metadata at the root
   api.get('/', (req, res) => {
