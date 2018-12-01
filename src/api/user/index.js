@@ -202,7 +202,26 @@ export default ({config, db}) => {
         });
     });
 
+    // host가 참가자 decline
+    api.post('/me/hosted/:id/declined', sessionChecker(), function(req,res) {
+        var eventIndex = req.params.id;
+        var uniqueAttendee = req.body.attendeeId;
     
+        attendeeModel.update(
+            {attending: 0},
+            {
+            where: {
+                eventId: eventIndex,
+                attendeeId: uniqueAttendee
+            }
+        }).then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
+    });
+
+
     api.get('/me/attended', sessionChecker(), function(req,res) {   
 
         var attendListJson = {};

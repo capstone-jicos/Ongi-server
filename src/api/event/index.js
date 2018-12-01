@@ -5,6 +5,7 @@ import users from '../../models/users';
 import timeTable from '../../models/venueTimeTable';
 import attendees from '../../models/attendees'
 import sessionChecker from '../../session-checker';
+
 import async from 'async';
 
 export default ({config, db}) => {
@@ -461,6 +462,29 @@ export default ({config, db}) => {
     
 
     // upsert
+    api.post('/:id/modify', sessionChecker(), (req, res, err) => {
+        var eventId = req.params.id;
+        var userId = req.user.uniqueId;
+
+        eventModel.update({
+            title: req.body.title,
+            description: req.body.description,
+            venueId: req.body.venueId,
+            feeAmount: req.body.fee,
+            eventImages: req.body.photoUrl,
+            type: req.body.type,
+            seats: req.body.seats,
+            date: req.body.date
+        }, {
+            where: { idx: eventId, hostId: userId }
+        })
+        .then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
+    });
+    
     api.post('/:id/modify', sessionChecker(), (req, res, err) => {
         var eventId = req.params.id;
         var userId = req.user.uniqueId;
