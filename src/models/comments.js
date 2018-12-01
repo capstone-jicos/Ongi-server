@@ -3,23 +3,16 @@
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('comments', {
     idx: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.INTEGER(11),
       allowNull: false,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     eventId: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
       references: {
         model: 'events',
-        key: 'idx'
-      }
-    },
-    parentId: {
-      type: DataTypes.STRING(64),
-      allowNull: true,
-      references: {
-        model: 'comments',
         key: 'idx'
       }
     },

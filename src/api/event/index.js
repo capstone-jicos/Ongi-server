@@ -2,11 +2,13 @@ import {Router} from 'express';
 import event from '../../models/events';
 import venue from '../../models/venue';
 import users from '../../models/users';
+import comments from '../../models/comments';
 import timeTable from '../../models/venueTimeTable';
 import attendees from '../../models/attendees'
 import sessionChecker from '../../session-checker';
 
 import async from 'async';
+import timestamp from 'unix-timestamp';
 
 export default ({config, db}) => {
     // timestamps: false,
@@ -17,6 +19,7 @@ export default ({config, db}) => {
     const venueModel = venue(db.sequelize, db.Sequelize);
     const userModel = users(db.sequelize, db.Sequelize);
     const attendeeModel = attendees(db.sequelize, db.Sequelize);
+    const commentsModel = comments(db.sequelize, db.Sequelize);
 
     var eventIndex;
     var venueId;
@@ -506,6 +509,92 @@ export default ({config, db}) => {
         }).catch(function(err){
             res.send(err);
         });
+    });
+
+    api.post('/postco', sessionChecker(), (req, res, err) => {
+        
+        var eventId = req.query.eventId;
+        var userId = req.user.uniqueId;
+        var comment = req.body.comment;
+
+        commentsModel.create({
+            eventId : eventId,
+            writerId : userId,
+            comment : comment,
+            updatedAt : null
+
+        }).then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
+    });
+
+    api.put('/updateco', sessionChecker(), (req, res, err) => {
+        var eventId = req.query.eventId;
+        var commentId = req.query.commentId;
+        var userId = req.user.uniqueId;
+        var comment = req.body.comment;
+
+        commentsModel.update({
+            comment : comment,
+            updatedAt : db.sequelize.literal('CURRENT_TIMESTAMP')
+        }, {
+            where: { idx: commentId, writerId: userId }
+        })
+        .then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
+    });
+
+    api.delete('/deleteco', sessionChecker(), (req, res, err) => {
+        var eventId = req.query.eventId;
+        var commentId = req.query.commentId;
+        var userId = req.user.uniqueId;
+
+        commentsModel.destroy({
+            where: { idx: commentId, writerId: userId },
+            truncate : false
+        })
+        .then(() => {
+            res.sendStatus(201);
+        }).catch(function(err){
+            res.send(err);
+        });
+    });
+
+    api.get('/lookupco/:eventId', (req, res) => {
+
+        var commentsListJson = {};
+        var commentsListArr = [];
+        var isUpdated;
+
+
+
+        commentsModel.findAll({
+            where: { eventId: req.params.eventId }
+        })
+        .then(commentsList => {
+            for (var i=0; i<commentsList.length; i++){
+                if(commentsList[i]['updatedAt'] == null){
+                    isUpdated = false;
+                }else{
+                    isUpdated = true;
+                }
+                commentsListJson = {                        
+                    "commentId":commentsList[i]['idx'],
+                    "writerId":commentsList[i]['writerId'],
+                    "comment":commentsList[i]['comment'],
+                    "createdAt":commentsList[i]['createdAt'],
+                    "updatedAt":commentsList[i]['updatedAt'],
+                    "isUpdated":isUpdated
+                }
+                commentsListArr[i] = commentsListJson;
+            }
+            res.send(commentsListArr);
+        })
     });
 
     return api;
