@@ -5,7 +5,6 @@ import users from '../../models/users';
 import timeTable from '../../models/venueTimeTable';
 import attendees from '../../models/attendees'
 import sessionChecker from '../../session-checker';
-
 import async from 'async';
 
 export default ({config, db}) => {
@@ -286,7 +285,7 @@ export default ({config, db}) => {
                         attending: 1
                     }
                 }) 
-                .then(attendee => {
+                .then(attendee => { 
                     attendeesNum = attendee.length;
                     for (var i=0; i<attendeesNum; i++){
                         attendNameArr[i] = attendee[i]["attendeeId"];
@@ -415,8 +414,6 @@ export default ({config, db}) => {
 
     api.post('/create', sessionChecker(), (req, res) => {
         var userId = req.user.uniqueId;
-        var eventNum, seatNum;
-        var tableModel = timeTable(db.sequelize, db.Sequelize);
         var eventModel = event(db.sequelize, db.Sequelize);
         async.series([
             function(callback){
@@ -432,8 +429,6 @@ export default ({config, db}) => {
                     startDate: req.body.startDate,
                     endDate: req.body.endDate
                 }).then(result => {
-                    eventNum = result.get({plain:true}).idx * 1;
-                    seatNum = result.get({palin:true}).seats * 1;
                     callback(null, result);
                 }).catch(function (err){
                     callback(err, null);
@@ -443,17 +438,7 @@ export default ({config, db}) => {
             function(err, result){
                 if(err) res.send(err)
                 else {
-                    tableModel.create({
-                        eventId: eventNum,
-                        venueId: req.body.venueId,
-                        startDate: req.body.startDate,
-                        endDate: req.body.endDate,
-                        seats: seatNum
-                    }).then(end => {
-                        res.send(result);
-                    }).catch(function (err){
-                        res.send(err);
-                    });
+                    res.send(result)
                 }              
             }
         );
@@ -462,29 +447,6 @@ export default ({config, db}) => {
     
 
     // upsert
-    api.post('/:id/modify', sessionChecker(), (req, res, err) => {
-        var eventId = req.params.id;
-        var userId = req.user.uniqueId;
-
-        eventModel.update({
-            title: req.body.title,
-            description: req.body.description,
-            venueId: req.body.venueId,
-            feeAmount: req.body.fee,
-            eventImages: req.body.photoUrl,
-            type: req.body.type,
-            seats: req.body.seats,
-            date: req.body.date
-        }, {
-            where: { idx: eventId, hostId: userId }
-        })
-        .then(() => {
-            res.sendStatus(201);
-        }).catch(function(err){
-            res.send(err);
-        });
-    });
-    
     api.post('/:id/modify', sessionChecker(), (req, res, err) => {
         var eventId = req.params.id;
         var userId = req.user.uniqueId;
