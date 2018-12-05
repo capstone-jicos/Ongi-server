@@ -2,8 +2,8 @@
 
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('paymentLog', {
-    transactionId: {
-      type: DataTypes.STRING(64),
+    merchant_uid: {
+      type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },
@@ -14,6 +14,14 @@ module.exports = function(sequelize, DataTypes) {
         model: 'users',
         key: 'uniqueId'
       }
+    },
+    receipt_url: {
+      type: DataTypes.STRING(128),
+      allowNull: false
+    },
+    canceled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     }
   }, {
     tableName: 'paymentLog',

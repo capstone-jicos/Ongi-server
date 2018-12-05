@@ -45,13 +45,13 @@ class Payments {
           // TODO Response 형태 참고해서 저장할 것들 정해주기
           // 동일 merchant_uid 로 요청보낸 경우에는 상태코드가 200으로 넘어와서 예외처리 필요
           if (data.code === 0) {
-            callback(data.response);
+            callback(true, data.response);
           } else {
-            callback(data.message);
+            callback(false, data.message);
           }
         }).catch(error => {
           console.debug(error.response);
-          callback(error);
+          callback(false, error);
         });
       });
   }
