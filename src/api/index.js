@@ -9,12 +9,30 @@ import credential from '../models/loginCredential';
 import timestamp from 'unix-timestamp';
 import async from 'async';
 import upload from '../lib/upload';
+import payments from '../lib/payments';
+
+let uid = 20;
 
 export default ({config, db, passport}) => {
   let api = Router();
   api.post('/upload', [sessionChecker(), upload({config})], (req,res) => {
     console.log(req.photoUrl);
     res.json({photoUrl:req.photoUrl})
+  });
+
+  api.post('/payments', (req, res) => {
+    let amount = "1000";
+    let payload = req.body;
+    req.body.amount = amount;
+    // TODO UID Rule 설정 필요!!
+    // 현재는 Global Variable 로 되어있는데, 이거에 대한 전략 필요!
+    req.body.merchant_uid = "merchant_" + (++uid);
+
+    new payments().requestPayment(payload, (result) => {
+      res.send({
+        "result": JSON.stringify(result)
+      })
+    });
   });
 
   // perhaps expose some API metadata at the root
@@ -83,7 +101,6 @@ export default ({config, db, passport}) => {
   api.use('/event', event({ config, db, passport }));
   api.use('/user', user({config, db, passport}));
   api.use('/venue', venue({config, db, passport}));
-  
+
   return api;
 };
-  
