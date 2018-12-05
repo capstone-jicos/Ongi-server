@@ -343,22 +343,30 @@ export default ({config, db}) => {
         let payload = req.body;
         payload.amount = feeAmount.dataValues.feeAmount;
 
-        paymentLogModel.max("merchant_uid").then(max => {
-          payload.merchant_uid = max + 1;
-          new payments().requestPayment(payload, (result, payload) => {
-            if (result) {
-              updateTransactionLog(payload, (err, result) => {
-                if (result) {
-                  getAttendeeStatus(updateAttendeeStatus);
-                }
+        getAttendeeStatus((err, result) => {
+            updateAttendeeStatus(() => {
+              paymentLogModel.max("merchant_uid").then(max => {
+                payload.merchant_uid = max + 1;
+                new payments().requestPayment(payload, (result, response) => {
+                  if (result) {
+                    updateTransactionLog(payload, (err, result) => {
+                      if (result) {
+                        debugger;
+                        res.send({
+                          "receipt_url": response.receipt_url
+                        }).end();
+                      }
+                    });
+                  } else {
+                    res.status(403).send({
+                      "meesage": payload
+                    })
+                  }
+                });
               });
-            } else {
-              res.status(403).send({
-                "meesage": payload
-              })
-            }
-          });
-        });
+            })
+          }
+        );
       });
 
       function getAttendeeStatus(callback) {
@@ -370,7 +378,7 @@ export default ({config, db}) => {
         })
           .then(attendChk => {
             if (attendChk.length > 0) {
-              if (attendChk[0]['attending'] == 0) {
+              if (attendChk[0]['attending'] === 0) {
                 haveData_1 = false;
                 haveData_0 = true;
                 NoData = false;
@@ -384,18 +392,18 @@ export default ({config, db}) => {
               haveData_0 = false;
               NoData = true;
             }
-            callback(null, 1);
+            callback(null, true);
           });
       }
-      function updateAttendeeStatus() {
+      function updateAttendeeStatus(callback) {
         if (NoData) {
           attendeeModel.create({
             eventId: eventId,
             attendeeId: sId,
             attending: attending
-          }).then(
-            res.sendStatus(201)
-          );
+          }).then(() => {
+            callback(null);
+          });
         }
         else if (haveData_0) {
           attendeeModel.update(
@@ -406,13 +414,13 @@ export default ({config, db}) => {
                 attendeeId: sId
               }
             }).then(() => {
-            res.sendStatus(201);
+            callback(null);
           }).catch(function (err) {
             res.send(err);
           });
         }
         else {
-          res.sendStatus(403)
+          res.status(403).send({"message": "이미 등록된 모임입니다."});
         }
       }
       function updateTransactionLog(payload, callback) {
