@@ -349,10 +349,10 @@ export default ({config, db}) => {
                 payload.merchant_uid = max + 1;
                 new payments().requestPayment(payload, (result, response) => {
                   if (result) {
-                    updateTransactionLog(payload, (err, result) => {
+                    updateTransactionLog(response, (err, result) => {
                       if (result) {
                         debugger;
-                        res.send({
+                        res.status(201).send({
                           "receipt_url": response.receipt_url
                         }).end();
                       }
