@@ -1,25 +1,60 @@
-import {Router} from 'express';
-const { Iamporter, IamporterError} = require('iamporter');
+import fs from "fs";
+import axios from "axios";
+import apiCredential from "../../config/iamport";
+import token from "../../config/iamport-token";
+import unixtimestamp from "unix-timestamp";
 
-export default({config}) =>{
+class Payments {
+  constructor() {
+    axios.defaults.baseURL = "https://api.iamport.kr";
+    this.header = {
+      "Authorization": "Bearer "
+    };
+  }
 
-    const iamporter = new Iamporter({apiKey: '2310553183193708', secret:'KieoPcd7xp94YwgNUrLf9N7ygHqoDKAn2PMR10Zyq9DoGTbAkXPuLW31EupieZFgPs8Qs7pSg2hWVtwg'});
-    return (req, res, next) => {
-        iamporter.payOnetime({
-            merchant_uid:req.body.uid,
-            amount:req.body.amount,
-            card_number:req.body.cardNum,
-            expiry:req.body.expiry,
-            birth:req.body.birth,
-            pwd_2digit:req.body.pwd
-        }).then(result => {
-            console.log(result);
-            next();
-        }).catch(err => {
-            if(err instanceof IamporterError){
-                console.log(err);
-            }
-            next();
-        })
-    }
+  async _getToken() {
+    console.debug(token);
+
+    return new Promise((resolve, reject) => {
+      if (unixtimestamp.now() > token.expired_at) {
+        // TODO Exception 처리 필요 (catch)
+        axios.post("/users/getToken", apiCredential).then(response => {
+          fs.writeFileSync(__dirname.concat("/../../config/iamport-token.json"), JSON.stringify(response.data.response));
+
+          return resolve(response.data.response.access_token);
+        }).catch(error => {
+          console.debug(error.response, null);
+          return reject(error);
+        });
+      } else {
+        return resolve(token.access_token);
+      }
+    });
+  }
+
+  requestPayment(payload, callback) {
+    this._getToken().then(access_token => {
+      let authHeader = this.header;
+
+      authHeader.Authorization += access_token;
+      console.debug(authHeader);
+
+        axios.post("/subscribe/payments/onetime", payload, {headers: authHeader}).then(response => {
+          debugger;
+          const {data} = response;
+          // TODO Response 형태 참고해서 저장할 것들 정해주기
+          // 동일 merchant_uid 로 요청보낸 경우에는 상태코드가 200으로 넘어와서 예외처리 필요
+          if (data.code === 0) {
+            callback(data.response);
+          } else {
+            callback(data.message);
+          }
+        }).catch(error => {
+          console.debug(error.response);
+          callback(error);
+        });
+      });
+  }
 }
+
+export default Payments;

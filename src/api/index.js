@@ -11,6 +11,8 @@ import async from 'async';
 import upload from '../lib/upload';
 import payments from '../lib/payments';
 
+let uid = 20;
+
 export default ({config, db, passport}) => {
   let api = Router();
   api.post('/upload', [sessionChecker(), upload({config})], (req,res) => {
@@ -18,27 +20,20 @@ export default ({config, db, passport}) => {
     res.json({photoUrl:req.photoUrl})
   });
 
-  api.post('/payments', payments({config}), (req,res) =>{
-    // const { Iamporter, IamporterError} = require('iamporter');
-    // const iamporter = new Iamporter({apiKey: '2310553183193708', secret:'KieoPcd7xp94YwgNUrLf9N7ygHqoDKAn2PMR10Zyq9DoGTbAkXPuLW31EupieZFgPs8Qs7pSg2hWVtwg'});
+  api.post('/payments', (req, res) => {
+    let amount = "1000";
+    let payload = req.body;
+    req.body.amount = amount;
+    // TODO UID Rule 설정 필요!!
+    // 현재는 Global Variable 로 되어있는데, 이거에 대한 전략 필요!
+    req.body.merchant_uid = "merchant_" + (++uid);
 
-    // iamporter.payOnetime({
-    //     merchant_uid:'merchant_133',
-    //     amount:'100',
-    //     card_number:'4619-5410-0544-1876',
-    //     expiry:'2023-07',
-    //     birth:'960320',
-    //     pwd_2digit:'74'
-    // }).then(result => {
-    //     res.send(result);
-    //     res.sendStatus(200);
-    // }).catch((err) => {
-    //   if(err instanceof IamporterError){
-    //     res.send(err.raw);
-    //   }
-    // })
-    res.send(200);
-  })
+    new payments().requestPayment(payload, (result) => {
+      res.send({
+        "result": JSON.stringify(result)
+      })
+    });
+  });
 
   // perhaps expose some API metadata at the root
   api.get('/', (req, res) => {
@@ -106,7 +101,6 @@ export default ({config, db, passport}) => {
   api.use('/event', event({ config, db, passport }));
   api.use('/user', user({config, db, passport}));
   api.use('/venue', venue({config, db, passport}));
-  
+
   return api;
 };
-  
