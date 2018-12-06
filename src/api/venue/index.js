@@ -119,7 +119,29 @@ export default ({config, db, passport}) => {
     api.get('/infor/:id', (req, res) =>{
         var venueId = req.params.id;
         venueModel.findOne({where : {idx : venueId}, include : [{model:tableModel, required : false}]}).then(result =>{
-            res.send(result);
+            result = JSON.stringify(result);
+            result = JSON.parse(result);
+            
+            var val = {
+                "type": result.type,
+                "location": {
+                    "country": result.conutry,
+                    "state": result.state,
+                    "city": result.city,
+                    "detailAddress": result.detail,
+                    "coordinates": {
+                        "lat": result.lat,
+                        "lng": result.lng
+                    }
+                },
+                "amenities": result.amenities,
+                "rules": result.rules,
+                "fee": result.fee,
+                "photoUrl": result.photoUrl,
+                "name": result.name
+            };
+            
+            res.send(val);
         })
     });
 
