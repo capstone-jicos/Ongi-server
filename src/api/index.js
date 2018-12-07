@@ -11,7 +11,7 @@ import async from 'async';
 import upload from '../lib/upload';
 import payments from '../lib/payments';
 
-let uid = 20;
+let uid = 42;
 
 export default ({config, db, passport}) => {
   let api = Router();
@@ -34,6 +34,22 @@ export default ({config, db, passport}) => {
       })
     });
   });
+
+  api.post('/paycancel', (req, res) => {
+    let amount = "";
+    let payload = req.body;
+    req.body.amount = amount;
+    // TODO UID Rule 설정 필요!!
+    // 현재는 Global Variable 로 되어있는데, 이거에 대한 전략 필요!
+    // req.body.merchant_uid = "merchant_" + (++uid);
+
+    new payments().cancelPayment(payload, (result) => {
+      res.send({
+        "result": JSON.stringify(result)
+      })
+    });
+  });
+ 
 
   // perhaps expose some API metadata at the root
   api.get('/', (req, res) => {

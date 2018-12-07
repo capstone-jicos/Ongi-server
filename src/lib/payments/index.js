@@ -57,6 +57,31 @@ class Payments {
         });
       });
   }
+
+  cancelPayment(payload, callback) {
+    this._getToken().then(access_token => {
+      let authHeader = this.header;
+
+      authHeader.Authorization += access_token;
+      console.debug(authHeader);
+
+        axios.post("/payments/cancel", payload, {headers: authHeader}).then(response => {
+          debugger;
+          const {data} = response;
+
+          if (data.code === 0) {
+            callback(true, data.response);
+          } else {
+            console.log(data.message);
+            callback(false, data.message);
+          }          
+          
+        }).catch(error => {
+          console.debug(error.response);
+          callback(false, error);
+        })
+    })
+  }
 }
 
 export default Payments;
