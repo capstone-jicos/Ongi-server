@@ -37,9 +37,6 @@ Upload.formidable = function (req, callback) {
   form.on('aborted', onAborted);
 
   form.parse(req, function (err, fields, files) {
-    form.off('end', onEnd);
-    form.off('error', onError);
-    form.off('aborted', onAborted);
   });
 };
 Upload.s3 = function (res, req, files, callback) {
