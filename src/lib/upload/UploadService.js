@@ -4,11 +4,7 @@ var
     Upload = {};
 AWS.config.region = 'ap-northeast-2'; //지역 서울 설정
 var s3 = new AWS.S3();
-var form = new formidable.IncomingForm({
-    encoding: 'utf-8',
-    multiples: true,
-    keepExtensions: false //확장자 제거
-});
+
 /*S3 버킷 설정*/
 var params = {
     Bucket: 'public.ongi.tk',
@@ -18,17 +14,33 @@ var params = {
 };
 
 Upload.formidable = function (req, callback) {
-    form.parse(req, function (err, fields, files) {
-    });
-    form.on('error', function (err) {
-        callback(err, null);
-    });
-    form.on('end', function () {
-        callback(null, this.openedFiles);
-    });
-    form.on('aborted', function () {
-        callback('form.on(aborted)', null);
-    });
+  let form = new formidable.IncomingForm({
+    encoding: 'utf-8',
+    multiples: true,
+    keepExtensions: false
+  });
+
+  function onError(err) {
+    callback(err, null);
+  }
+
+  function onEnd() {
+    callback(null, this.openedFiles);
+  }
+
+  function onAborted() {
+    callback('form.on(aborted)', null);
+  }
+
+  form.on('error', onError);
+  form.on('end', onEnd);
+  form.on('aborted', onAborted);
+
+  form.parse(req, function (err, fields, files) {
+    form.off('end', onEnd);
+    form.off('error', onError);
+    form.off('aborted', onAborted);
+  });
 };
 Upload.s3 = function (res, req, files, callback) {
     if(!files[0]){
@@ -44,10 +56,10 @@ Upload.s3 = function (res, req, files, callback) {
             res.status(200);
             return callback(0,null);
         });
-        
-       
+
+
     }
-    
+
 };
 
 
