@@ -420,7 +420,8 @@ export default ({config, db}) => {
             gender:req.body.gender,
             country:req.body.country,
             state:req.body.state,
-            city:req.body.city
+            city:req.body.city,
+            email:req.body.email
         },
             {
                 where: {uniqueId:req.user.uniqueId}
