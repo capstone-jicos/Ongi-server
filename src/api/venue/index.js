@@ -405,10 +405,11 @@ export default ({config, db, passport}) => {
                     where : {eventId : eventId}
                 }).then(result =>{
                     eventModel.update({
-                        status : '0'
+                        status : '2'
                     }, {
                         where : {idx : eventId}
                     }).then(result2 =>{
+                        
                         res.send(200);
                     }).catch(function(err){
                         res.send(err);
