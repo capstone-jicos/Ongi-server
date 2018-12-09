@@ -30,6 +30,9 @@ module.exports = function(sequelize, DataTypes) {
     city: {
       type: DataTypes.STRING(3),
       allowNull: true
+    },
+    email: {
+      type: DataTypes.STRING(45)
     }
   }, {
     timestamps: false,
