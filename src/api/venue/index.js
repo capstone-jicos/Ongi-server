@@ -6,6 +6,8 @@ import users from '../../models/users';
 import attendees from '../../models/attendees';
 import timeTable from '../../models/venueTimeTable';
 import applyTable from '../../models/applyVenue';
+import paymentLog from "../../models/paymentLog";
+import Payments from '../../lib/payments';
 
 export default ({config, db, passport}) => {
     let api = Router();
@@ -14,6 +16,8 @@ export default ({config, db, passport}) => {
     const tableModel = timeTable(db.sequelize, db.Sequelize);
     const venueModel = venue(db.sequelize, db.Sequelize);
     const applyModel = applyTable(db.sequelize, db.Sequelize);
+    const paymentLogModel = paymentLog(db.sequelize, db.Sequelize);
+
     venueModel.hasMany(db.venueTimeTable, {foreignKey:'venueId', sourceKey:'idx'});
     tableModel.belongsTo(db.venue, {foreignKey:'venueId', targetKey:'idx'});
 
@@ -124,8 +128,9 @@ export default ({config, db, passport}) => {
             
             var val = {
                 "type": result.type,
+                "accomodate": result.accomodate,
                 "location": {
-                    "country": result.conutry,
+                    "country": result.country,
                     "state": result.state,
                     "city": result.city,
                     "detailAddress": result.detail,
@@ -215,9 +220,12 @@ export default ({config, db, passport}) => {
     })
 
     //venueId가 parameter로 넘어와야함
-    api.get('/apply', sessionChecker(), (req, res) =>{
+    api.post('/apply', sessionChecker(), (req, res) =>{
         var venueId = req.query.venueId;
         var eventId = req.query.eventId;
+
+        let payload = req.body;
+
         venueModel.findAll({where:{
             idx : venueId
         },  
@@ -230,9 +238,13 @@ export default ({config, db, passport}) => {
                 var table = new Object();
                 eachVenue = JSON.stringify(result[searchLen]);
                 eachVenue = JSON.parse(eachVenue);
+                
                 var providerId = eachVenue.uniqueId;
-                table = eachVenue.venueTimeTables;
                 var errstat = 0;
+                
+                payload.amount = eachVenue.fee;
+                table = eachVenue.venueTimeTables;
+                
                 for(var tableLen = 0; tableLen < Object.keys(table).length; tableLen++){
                     if(table[tableLen].startDate > req.query.startDate){
                         if(table[tableLen].startDate < req.query.endDate){
@@ -245,25 +257,44 @@ export default ({config, db, passport}) => {
                         continue;
                     }
                 }
-                if(errstat) res.sendStatus(412);
+                if(errstat) res.Status(412).send({"message":"예약할수 없는 시간입니다."});
                 else {
-                    applyModel.create({
-                        venueId : venueId,
-                        eventId : eventId,
-                        status : 1,
-                        hostId : req.user.uniqueId,
-                        providerId : providerId
-                    }).then(result2 =>{
-                        eventModel.update({
-                            status : '1'
-                        }, {
-                            where : {idx:eventId}
-                        }).then(res.sendStatus(200)
-                        ).catch(err => {
-                            res.send(err);
+                    paymentLogModel.max("merchant_uid").then(max => {
+                        let merchant_uid = max + 1;
+                        payload.merchant_uid = merchant_uid;
+
+                        new Payments().requestPayment(payload, (result, response) =>{
+                            if (result) {
+                                payload.userId = req.user.uniqueId;
+                                payload.receipt_url = response.receipt_url;
+
+                                paymentLogModel.upsert(payload).then(result => {
+                                    applyModel.create({
+                                        venueId : venueId,
+                                        eventId : eventId,
+                                        status : 1,
+                                        hostId : req.user.uniqueId,
+                                        providerId : providerId
+                                    }).then(()=>{
+                                        eventModel.update({
+                                            status : '1',
+                                            venueId : venueId
+                                        }, {
+                                            where : {idx:eventId}
+                                        }).then(() => {
+                                            debugger;
+                                            res.status(201).send({
+                                                "receipt_url" : response.receipt_url
+                                            }).end();
+                                        })
+                                    })
+                                });
+                            } else {
+                                res.status(403).send({
+                                    "message" : payload
+                                })
+                            }
                         })
-                    }).catch(function(err){
-                        res.send(err);
                     })
                 }
             }
@@ -282,11 +313,12 @@ export default ({config, db, passport}) => {
             result = JSON.parse(result);
             var list = new Array();
             for(var searchLen = 0; searchLen < Object.keys(result).length; searchLen++){
-                var eachVenue = new Object();
-                eachVenue = JSON.stringify(result[searchLen]);
-                eachVenue = JSON.parse(eachVenue);
-                list.push(eachVenue.eventId);
+                var eachApply = new Object();
+                eachApply = JSON.stringify(result[searchLen]);
+                eachApply = JSON.parse(eachApply);
+                list.push(eachApply.eventId);
             }
+
             eventModel.findAll({
                 where : {idx : list}
             }).then(eventlist =>{
@@ -297,10 +329,10 @@ export default ({config, db, passport}) => {
         }).catch(function(err){
             res.send(err);
         })
-    })  
-
+    })
+    
     api.get('/accept', sessionChecker(), (req, res) =>{
-        var eventId = req.query.eventId;
+        var eventId = req.body.eventId;
         applyModel.findOne({
             where : {
                 eventId : eventId
@@ -318,7 +350,7 @@ export default ({config, db, passport}) => {
                     where : {eventId : eventId}
                 }).then(result =>{
                     eventModel.findOne({
-                        where : {idx : eventid}
+                        where : {idx : eventId}
                     }).then(date =>{
                         date = JSON.stringify(date);
                         date = JSON.parse(date);
