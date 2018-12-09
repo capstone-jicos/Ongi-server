@@ -342,31 +342,32 @@ export default ({config, db}) => {
       }).then(feeAmount => {
         let payload = req.body;
         payload.amount = feeAmount.dataValues.feeAmount;
-
-        getAttendeeStatus((err, result) => {
-            updateAttendeeStatus(() => {
-              paymentLogModel.max("merchant_uid").then(max => {
-                payload.merchant_uid = max + 1;
-                new payments().requestPayment(payload, (result, response) => {
-                  if (result) {
-                    updateTransactionLog(response, (err, result) => {
+        paymentLogModel.max("merchant_uid").then(max => {
+            let merchant_uid = max + 1;
+            payload.merchant_uid = merchant_uid;
+            getAttendeeStatus((err, result) => {
+                updateAttendeeStatus(merchant_uid, () => {
+                    new payments().requestPayment(payload, (result, response) => {
                       if (result) {
-                        debugger;
-                        res.status(201).send({
-                          "receipt_url": response.receipt_url
-                        }).end();
+                        updateTransactionLog(response, (err, result) => {
+                          if (result) {
+                            debugger;
+                            res.status(201).send({
+                              "receipt_url": response.receipt_url
+                            }).end();
+                          }
+                        });
+                      } else {
+                        res.status(403).send({
+                          "meesage": payload
+                        })
                       }
                     });
-                  } else {
-                    res.status(403).send({
-                      "meesage": payload
-                    })
-                  }
-                });
-              });
-            })
-          }
-        );
+                
+                })
+              }
+            );
+        });
       });
 
       function getAttendeeStatus(callback) {
@@ -395,19 +396,21 @@ export default ({config, db}) => {
             callback(null, true);
           });
       }
-      function updateAttendeeStatus(callback) {
+      function updateAttendeeStatus(merchant_uid, callback) {
         if (NoData) {
           attendeeModel.create({
             eventId: eventId,
             attendeeId: sId,
-            attending: attending
+            attending: attending,
+            merchant_uid: merchant_uid
           }).then(() => {
             callback(null);
           });
         }
         else if (haveData_0) {
           attendeeModel.update(
-            {attending: 2},
+            {attending: 2,
+             merchant_uid: merchant_uid},
             {
               where: {
                 eventId: eventId,

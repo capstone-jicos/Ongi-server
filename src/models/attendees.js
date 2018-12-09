@@ -23,6 +23,9 @@ module.exports = function(sequelize, DataTypes) {
     attending: {
       type: DataTypes.INTEGER(1),
       allowNull: false
+    },
+    merchant_uid: {
+      type: DataTypes.INTEGER(11)
     }
   }, {
     timestamps: false,

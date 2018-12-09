@@ -57,8 +57,8 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     status: {
-      type: DataTypes.INTEGER(3),
-      allowNull: false
+      type: DataTypes.INTEGER(1),
+      dafaultValue : '-1'
     }
   }, {
     tableName: 'events',
