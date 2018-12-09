@@ -425,13 +425,15 @@ export default ({config, db}) => {
         }).then(result => {
           if (result.length !== 0) {
             let newAccessToken = req.body.newAccessToken;
-            if (newAccessToken !== undefined && newAccessToken.length !== 0) {
+            if (
+              (newAccessToken !== undefined && newAccessToken !== null)
+              && newAccessToken.length !== 0) {
               credentialModel.update({
                 accessToken: req.body.newAccessToken
               }, {
                 where: {uniqueId: req.user.uniqueId}
               }).then((result) => {
-                if (result !== 1) {
+                if (result[0] !== 1) {
                   res.status(500).send({"msg": "서버 에러"});
                   return false;
                 } else {
