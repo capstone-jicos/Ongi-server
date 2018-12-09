@@ -30,6 +30,9 @@ module.exports = function(sequelize, DataTypes) {
       providerId: {
           type: DataTypes.STRING(45),
           allowNull: false
+      },
+      merchant_uid: {
+        type: DataTypes.INTEGER(11)
       }
     }, {
       timestamps: false,
