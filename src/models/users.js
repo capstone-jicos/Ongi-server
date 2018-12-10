@@ -16,8 +16,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     gender: {
-      type: DataTypes.CHAR(1),
-      allowNull: false
+      type: DataTypes.CHAR(1)
     },
     country: {
       type: DataTypes.INTEGER(3),

@@ -69,6 +69,13 @@ export default ({config, db, passport}) => {
     });
   });
 
+  api.get('/auth', passport.authenticate('google', {scope:['https://www.googleapis.com/auth/plus.login']}));
+
+  api.get('/auth/callback', passport.authenticate('google', {failureRedirect: 'http://www.naver.com'}),
+  function(req, res) {
+    //res.send(req.status)
+    res.redirect('http://www.daum.net');
+  })
   api.post('/join', (req, res) => {
     const userModel = users(db.sequelize, db.Sequelize);
     const credentialModel = credential(db.sequelize, db.Sequelize);
