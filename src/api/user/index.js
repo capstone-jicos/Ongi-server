@@ -3,7 +3,8 @@ import sessionChecker from '../../session-checker';
 import users from '../../models/users';
 import event from '../../models/events';
 import venue from '../../models/venue';
-import attendees from '../../models/attendees'
+import attendees from '../../models/attendees';
+import credentials from "../../models/loginCredential";
 
 export default ({config, db}) => {
     let api = Router();
@@ -14,6 +15,7 @@ export default ({config, db}) => {
     const venueModel = venue(db.sequelize, db.Sequelize);
     const attendeeModel = attendees(db.sequelize, db.Sequelize);
     const userModel = users(db.sequelize, db.Sequelize);
+  const credentialModel = credentials(db.sequelize, db.Sequelize);
 
     var userId;
 
@@ -27,13 +29,13 @@ export default ({config, db}) => {
 
     // 주최 리스트 보기
     // 참가 대기중 수 보여주기
-    api.get('/me/hosted', sessionChecker(), function(req,res) {  
-               
+    api.get('/me/hosted', sessionChecker(), function(req,res) {
+
         userId = req.user.uniqueId;
 
         var hostListJson = {};
         var hostListArr = [];
-        
+
         var eventIndex = [];
         var title = [];
         var description = [];
@@ -47,7 +49,7 @@ export default ({config, db}) => {
         var eventIdNum = [];
 
         async.series([
-            
+
             function(callback) {
                 eventModel.findAll({
                     where: {
@@ -66,9 +68,9 @@ export default ({config, db}) => {
                         type[i] = hostList[i]['type'];
                         startDate[i] = hostList[i]['startDate'];
                         endDate[i] = hostList[i]['endDate'];
-                    }          
+                    }
                     callback(null,1);
-                })        
+                })
             },
             function(callback) {
                 attendeeModel.findAll({
@@ -81,7 +83,7 @@ export default ({config, db}) => {
                     for (var j=0; j<eventIndex.length; j++) {
                         eventIdNum[j] = 0;
                     }
-                    
+
                     for (var i=0; i<attendeeList.length; i++) {
                         for (var j=0; j<eventIndex.length; j++) {
                             if (attendeeList[i]['eventId'] == eventIndex[j]) {
@@ -95,13 +97,13 @@ export default ({config, db}) => {
                     }
                     callback(null,1);
                 })
-            }            
+            }
         ],
         function() {
             for (var i=0; i<eventIndex.length; i++) {
-                
+
                 eventIndexGlobal = eventIndex;
-                
+
                 hostListJson = {
                     "eventIndex": eventIndex[i],
                     "title": title[i],
@@ -110,7 +112,7 @@ export default ({config, db}) => {
                     "feeAmount": feeAmount[i],
                     "eventImages": eventImages[i],
                     "type": type[i],
-                    "startDate": startDate[i],                
+                    "startDate": startDate[i],
                     "endDate": endDate[i],
                     "holdNum": eventIdNum[i]
                 }
@@ -119,7 +121,7 @@ export default ({config, db}) => {
             res.send(hostListArr);
         });
 
-        
+
     });
 
 
@@ -132,8 +134,8 @@ export default ({config, db}) => {
         var attendeeImageArr = [];
 
         var attendeeJson = {};
-        var attendeeListArr = [];        
-        
+        var attendeeListArr = [];
+
         async.series([
 
             function(callback){
@@ -153,7 +155,7 @@ export default ({config, db}) => {
                         attendeeArr[i] = attendeeList[i]['attendeeId'];
                     }
                     callback(null,1);
-                })        
+                })
             },
             function(callback) {
                 userModel.findAll({
@@ -174,11 +176,11 @@ export default ({config, db}) => {
                     callback(null,1);
                 })
             }
-            
+
         ],
         function() {
             for (var i=0; i<attendeeArr.length; i++) {
-                
+
                 attendeeJson = {
                     "attendeeId": attendeeArr[i],
                     "attendeeName": attendeeNameArr[i],
@@ -194,7 +196,7 @@ export default ({config, db}) => {
     api.post('/me/hosted/:id/accepted', sessionChecker(), function(req,res) {
         var eventIndex = req.params.id;
         var uniqueAttendee = req.body.attendeeId;
-    
+
         attendeeModel.update(
             {attending: 1},
             {
@@ -213,7 +215,7 @@ export default ({config, db}) => {
     api.post('/me/hosted/:id/declined', sessionChecker(), function(req,res) {
         var eventIndex = req.params.id;
         var uniqueAttendee = req.body.attendeeId;
-    
+
         attendeeModel.update(
             {attending: 0},
             {
@@ -229,7 +231,7 @@ export default ({config, db}) => {
     });
 
 
-    api.get('/me/attended', sessionChecker(), function(req,res) {   
+    api.get('/me/attended', sessionChecker(), function(req,res) {
 
         var eventIdArr = [];
         var eventIdHoldArr = [];
@@ -241,7 +243,7 @@ export default ({config, db}) => {
         var attendSDate = [];
         var attendEDate = [];
         var attendHost = [];
-        
+
         var hostName = [];
         var hostImage = [];
 
@@ -260,7 +262,7 @@ export default ({config, db}) => {
                 })
                 .then(attendList => {
                     for (var i=0; i<attendList.length; i++){
-                        eventIdArr[i] = attendList[i]["eventId"];                        
+                        eventIdArr[i] = attendList[i]["eventId"];
                     }
                     callback(null,1);
                 })
@@ -274,7 +276,7 @@ export default ({config, db}) => {
                 })
                 .then(attendList => {
                     for (var i=0; i<attendList.length; i++){
-                        eventIdHoldArr[i] = attendList[i]["eventId"];                        
+                        eventIdHoldArr[i] = attendList[i]["eventId"];
                     }
                     callback(null,1);
                 })
@@ -299,7 +301,7 @@ export default ({config, db}) => {
                                 break;
                             }
                         }
-                    }        
+                    }
                     callback(null,1);
                 })
             },
@@ -324,7 +326,7 @@ export default ({config, db}) => {
                                 break;
                             }
                         }
-                    }        
+                    }
                     callback(null,1);
                 })
             },
@@ -335,7 +337,7 @@ export default ({config, db}) => {
                     }
                 })
                 .then(hostInfo => {
-                    
+
                     for (var i=0; i<attendHost.length; i++) {
                         for (var j=0; j<hostInfo.length; j++) {
                             if (attendHost[i] == hostInfo[j]['uniqueId']) {
@@ -345,14 +347,14 @@ export default ({config, db}) => {
                                 break;
                             }
                         }
-                    }        
+                    }
                     callback(null,1);
                 })
             }
         ],
         function() {
             for (var i=0; i<eventIdArr.length + eventIdHoldArr.length; i++) {
-                
+
                 if (i < eventIdArr.length) {
                     attendListJson = {
                         "eventIdx": eventIdArr[i],
@@ -365,7 +367,7 @@ export default ({config, db}) => {
                         "status": true,
                         "hostName": hostName[i],
                         "hostImage": hostImage[i]
-                    }        
+                    }
                 } else {
                     attendListJson = {
                         "eventIdx": eventIdHoldArr[i],
@@ -386,11 +388,11 @@ export default ({config, db}) => {
         });
     });
 
-    api.get('/me/venue', sessionChecker(), (req,res) => {   
+    api.get('/me/venue', sessionChecker(), (req,res) => {
 
         var venueListJson = {};
         var venueListArr = [];
-        
+
         venueModel.findAll({
             where: {
                 uniqueId: req.user.uniqueId
@@ -399,7 +401,7 @@ export default ({config, db}) => {
         .then(venueList => {
 
             for (var i=0; i<venueList.length; i++){
-                venueListJson = {                        
+                venueListJson = {
                     "venueId":venueList[i]['idx'],
                     "name": venueList[i]['name'],
                     "address": venueList[i]['state'] +" "+ venueList[i]['city']+" "+ venueList[i]['detail'],
@@ -410,25 +412,65 @@ export default ({config, db}) => {
             res.send(venueListArr);
         })
     });
-  
+
     api.post('/me/update', sessionChecker(), (req, res) => {
-        const userModel = users(db.sequelize, db.Sequelize);
+      const userModel = users(db.sequelize, db.Sequelize);
+
+      function updateUserPassword(callback) {
+        credentialModel.findAll({
+          where: {
+            uniqueId: req.user.uniqueId,
+            accessToken: req.body.currentAccessToken
+          }
+        }).then(result => {
+          if (result.length !== 0) {
+            let newAccessToken = req.body.newAccessToken;
+            if (
+              (newAccessToken !== undefined && newAccessToken !== null)
+              && newAccessToken.length !== 0) {
+              credentialModel.update({
+                accessToken: req.body.newAccessToken
+              }, {
+                where: {uniqueId: req.user.uniqueId}
+              }).then((result) => {
+                if (result[0] !== 1) {
+                  res.status(500).send({"msg": "서버 에러"});
+                  return false;
+                } else {
+                  callback();
+                }
+              });
+            } else {
+              callback();
+            }
+          } else {
+            res.status(403).send({"msg": "비밀번호가 틀렸습니다"});
+          }
+        });
+      }
+
+      function updateUserInfo() {
         userModel.update({
-            uniqueId:req.user.uniqueId,
-            displayName:req.body.displayName,
-            profileImage:req.body.profileImage,
-            gender:req.body.gender,
-            country:req.body.country,
-            state:req.body.state,
-            city:req.body.city
-        },
-            {
-                where: {uniqueId:req.user.uniqueId}
-            }).then(() => {
-                res.sendStatus(200);
-            }).catch(function(err){
-                res.send(err);
-            });
+            uniqueId: req.user.uniqueId,
+            displayName: req.body.displayName,
+            profileImage: req.body.profileImage,
+            gender: req.body.gender,
+            country: req.body.country,
+            state: req.body.state,
+            city: req.body.city
+          },
+          {
+            where: {uniqueId: req.user.uniqueId}
+          }).then(() => {
+          res.sendStatus(200);
+        }).catch(function (err) {
+          res.send(err);
+        });
+      }
+
+      updateUserPassword(function () {
+        updateUserInfo();
+      });
     });
 
     return api;
