@@ -49,7 +49,7 @@ export default ({config, db, passport}) => {
       })
     });
   });
- 
+
 
   // perhaps expose some API metadata at the root
   api.get('/', (req, res) => {
@@ -73,10 +73,10 @@ export default ({config, db, passport}) => {
 
   api.get('/auth/callback', passport.authenticate('google', {failureRedirect: 'http://www.naver.com'}),
   function(req, res) {
-    if(req.user==1){
+    if (req.user.status === 1) {
       res.redirect('http://www.daum.net');
     }
-    else if(req.user==2){
+    else if (req.user.status === 2) {
       res.redirect('http://www.google.com');
     }
   })
