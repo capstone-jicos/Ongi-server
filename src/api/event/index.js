@@ -5,6 +5,7 @@ import users from '../../models/users';
 import timeTable from '../../models/venueTimeTable';
 import attendees from '../../models/attendees'
 import paymentLog from "../../models/paymentLog";
+import accesskey from "../../config/accesskey";
 import sessionChecker from '../../session-checker';
 import async from 'async';
 
@@ -39,8 +40,8 @@ export default ({config, db}) => {
     // country=? & state=?
     api.get('/', (req, res) => {
 
-        var getCountry = req.query.country;
         var getState = req.query.state;
+        var getCity = req.query.city;
 
         var venueIndexArr = [];
         var venueIndexLen;
@@ -48,11 +49,11 @@ export default ({config, db}) => {
 
         async.series([
             function(callback){
-                if(getCountry != undefined && getState != undefined) {
+                if(getState != undefined && getCity != undefined) {
                     venueModel.findAll({
                         where: {
-                            country: getCountry,
-                            state: getState
+                            state: getState,
+                            city: getCity
                         }
                     })
                     .then(venueIdx => {
@@ -62,10 +63,11 @@ export default ({config, db}) => {
                         }
                         callback(null,1);
                     });
-                } else if(getCountry != undefined && getState == undefined) {
+                } else if(getState != undefined && getCity == undefined) {
+
                     venueModel.findAll({
                         where: {
-                            country: getCountry
+                            state: getState
                         }
                     })
                     .then(venueIdx => {
@@ -334,6 +336,8 @@ export default ({config, db}) => {
         var haveData_0 = false;
         var NoData = false;
 
+        var guestName,guestEmail;
+      
       eventModel.findOne({
         attributes: ["feeAmount"],
         where: {
@@ -352,6 +356,12 @@ export default ({config, db}) => {
                         updateTransactionLog(response, (err, result) => {
                           if (result) {
                             debugger;
+
+                            getUserInfo((err, result) => {
+                                var receipt_link = response.receipt_url;
+                                sendEmail((receipt_link) => {})
+                            })
+
                             res.status(201).send({
                               "receipt_url": response.receipt_url
                             }).end();
@@ -395,7 +405,66 @@ export default ({config, db}) => {
             }
             callback(null, true);
           });
-      }
+      }     
+      
+      function getUserInfo(callback) {
+          userModel.findOne({
+              where: {
+                  uniqueId: sId
+                }
+            }).then(eventGuest=> {
+                guestName = eventGuest['displayName'];
+                guestEmail = eventGuest['email'];
+                callback(null,1);
+            })
+        }
+        
+        function sendEmail(callback,receipt) {
+                const AWS = require("aws-sdk");
+    
+                AWS.config.update({
+                    accessKeyId: accesskey['accessKeyId'],
+                    secretAccessKey: accesskey['secretAccessKey'],
+                    region: accesskey['region']
+                });
+    
+                const ses = new AWS.SES({ apiVersion: "2010-12-01" });
+                const params = {
+                Destination: {
+                    ToAddresses: [guestEmail] // Email address/addresses that you want to send your email
+                },
+                Message: {
+                    Body: {
+                        Html: {
+                            // HTML Format of the email
+                            Charset: "UTF-8",
+                            Data: "<html><body style='margin: 0; padding: 0;'><table border='0'>"
+                            +"<tr style='text-align: center; font-size: 50px;'><td>"+ guestName +"님!</td></tr>"
+                            +"<tr><td><img src=\"http://public.ongi.tk/image/event_join.PNG\"/></td></tr>"
+                            +"<tr style='text-align: center; font-size: 25px;'><td><a href="+receipt+">결제 정보 확인하기</a></td></tr>"
+                            +"</table></body></html>"
+                        },
+                        Text: {
+                            Charset: "UTF-8",
+                            Data: "Ongi"
+                        }
+                    },
+                    Subject: {
+                        Charset: "UTF-8",
+                        Data: "모임 신청 완료!"
+                    }
+                },
+                Source: "no-reply@ongi.tk"
+                };
+    
+                const sendEmail = ses.sendEmail(params).promise();
+    
+                sendEmail
+                .then(data => {
+                    callback(null,1);
+                })
+            }
+
       function updateAttendeeStatus(merchant_uid, callback) {
         if (NoData) {
           attendeeModel.create({
@@ -423,7 +492,7 @@ export default ({config, db}) => {
           });
         }
         else {
-          res.status(403).send({"message": "이미 등록된 모임입니다."});
+          res.status(403).send({"message": "이미 등록된 모임입니다."}).end();
         }
       }
       function updateTransactionLog(payload, callback) {
@@ -485,32 +554,6 @@ export default ({config, db}) => {
                 }
             }
         );
-
-    });
-
-
-    // upsert
-    api.post('/:id/modify', sessionChecker(), (req, res, err) => {
-        var eventId = req.params.id;
-        var userId = req.user.uniqueId;
-
-        eventModel.update({
-            title: req.body.title,
-            description: req.body.description,
-            venueId: req.body.venueId,
-            feeAmount: req.body.fee,
-            eventImages: req.body.photoUrl,
-            type: req.body.type,
-            seats: req.body.seats,
-            date: req.body.date
-        }, {
-            where: { idx: eventId, hostId: userId }
-        })
-        .then(() => {
-            res.sendStatus(201);
-        }).catch(function(err){
-            res.send(err);
-        });
     });
 
     return api;
