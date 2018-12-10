@@ -64,6 +64,7 @@ export default ({config, db}) => {
                         callback(null,1);
                     });
                 } else if(getState != undefined && getCity == undefined) {
+
                     venueModel.findAll({
                         where: {
                             state: getState
@@ -336,7 +337,7 @@ export default ({config, db}) => {
         var NoData = false;
 
         var guestName,guestEmail;
-
+      
       eventModel.findOne({
         attributes: ["feeAmount"],
         where: {
@@ -553,7 +554,6 @@ export default ({config, db}) => {
                 }
             }
         );
-
     });
 
     return api;

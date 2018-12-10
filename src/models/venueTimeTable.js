@@ -26,10 +26,6 @@ module.exports = function(sequelize, DataTypes) {
       endDate: {
         type: DataTypes.DATE,
         allowNull: false
-      },
-      seats:{
-        type: DataTypes.INTEGER(10),
-        allowNull: false
       }
     }, {
       tableName: 'venueTimeTable',

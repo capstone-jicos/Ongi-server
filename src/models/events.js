@@ -26,7 +26,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     venueId: {
       type: DataTypes.INTEGER(11),
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'venue',
         key: 'idx'
@@ -55,6 +55,10 @@ module.exports = function(sequelize, DataTypes) {
     endDate: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    status: {
+      type: DataTypes.INTEGER(1),
+      dafaultValue : '-1'
     }
   }, {
     tableName: 'events',

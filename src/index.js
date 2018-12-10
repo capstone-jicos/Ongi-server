@@ -10,6 +10,8 @@ import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import session from 'express-session';
 import UserModel from './models/loginCredential';
+import "babel-polyfill";
+import "babel-plugin-transform-runtime";
 
 let app = express();
 app.server = http.createServer(app);
