@@ -71,14 +71,13 @@ export default ({config, db, passport}) => {
 
   api.get('/auth', passport.authenticate('google', {scope:['https://www.googleapis.com/auth/plus.login']}));
 
-  api.get('/auth/callback', passport.authenticate('google', {failureRedirect: 'http://www.ongi.tk/login'}),
+  api.get('/auth/callback', passport.authenticate('google', {failureRedirect: 'http://www.naver.com'}),
   function(req, res) {
-    console.log(req.user);
-    if(user==1){
-      res.redirect('http://www.ongi.tk/my/InfoUpdate');
+    if(req.user==1){
+      res.redirect('http://www.daum.net');
     }
-    else if(user==2){
-      res.redirect('http://www.ongi.tk');
+    else if(req.user==2){
+      res.redirect('http://www.google.com');
     }
   })
   api.post('/join', (req, res) => {

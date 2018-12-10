@@ -358,6 +358,10 @@ export default ({config, db}) => {
                           }
                         });
                       } else {
+                        // paymentLogModel.create({
+                        //     merchant_uid : merchant_uid,
+
+                        // })
                         res.status(403).send({
                           "meesage": payload
                         })

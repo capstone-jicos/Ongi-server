@@ -58,19 +58,19 @@ function(username, password, done){
 passport.use(new GoogleStrategy({
   clientID: authKey.clientID,
   clientSecret: authKey.clientSecret,
-  callbackURL: "http://api.ongi.tk/auth/callback"
+  callbackURL: "http://localhost:8080/auth/callback" 
 },
   function(accessToken, refreshToken, profile, done) {
     var id = timestamp.now()*1000;
-    let status = 0;
     const userModel = user(db.sequelize, db.Sequelize);
     const credentialModel = credential(db.sequelize, db.Sequelize);
     credentialModel.findOne({where : {userId:profile.id}}).then((userData) => {
-      console.log("Find Credential: ");
-      console.log(profile);
       if(userData){
-        status = 2;
-        return done(null, status);
+        userModel.findOne({where: {uniqueId:profile.id}}).then(userInfo =>{
+          let result = userInfo.dataValues;
+          result.status = 2;
+          return done(null, result);
+        }) 
       } else {
         userModel.create({
           uniqueId : id,
@@ -82,8 +82,9 @@ passport.use(new GoogleStrategy({
             userId : profile.id,
             accessToken : profile.id
           }).then(function(result2){
-            status = 1;
-            return done(null, status);
+            let trueResult = result.dataValues;
+            trueResult.status = 1;
+            return done(null, trueResult);
           }).catch(function(err){
             return done(err);
           })
