@@ -9,9 +9,14 @@ import config from './config/app.json';
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import session from 'express-session';
-import UserModel from './models/loginCredential';
+import credential from './models/loginCredential';
+import user from './models/users';
+import authKey from "../src/config/auth";
 import "babel-polyfill";
 import "babel-plugin-transform-runtime";
+import timestamp from 'unix-timestamp';
+
+var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
 let app = express();
 app.server = http.createServer(app);
@@ -42,7 +47,7 @@ passport.use(new LocalStrategy({
   session: true
 },
 function(username, password, done){
-  const User = UserModel(db.sequelize, db.Sequelize);
+  const User = user(db.sequelize, db.Sequelize);
   User.findOne({where: {userId: username}}).then(user => {
     if(!user) return done(null, false);
     if(user.dataValues.accessToken != password) return done(null, false);
@@ -50,6 +55,45 @@ function(username, password, done){
   })
 }));
 
+passport.use(new GoogleStrategy({
+  clientID: authKey.clientID,
+  clientSecret: authKey.clientSecret,
+  callbackURL: "http://api.ongi.tk/auth/callback"
+},
+  function(accessToken, refreshToken, profile, done) {
+    var id = timestamp.now()*1000;
+    let status = 0;
+    const userModel = user(db.sequelize, db.Sequelize);
+    const credentialModel = credential(db.sequelize, db.Sequelize);
+    credentialModel.findOne({where : {userId:profile.id}}).then((userData) => {
+      console.log("Find Credential: ");
+      console.log(profile);
+      if(userData){
+        status = 2;
+        return done(null, status);
+      } else {
+        userModel.create({
+          uniqueId : id,
+          displayName : profile.displayName
+        }).then(function (result){
+          credentialModel.create({
+            provider : 'google',
+            uniqueId : id,
+            userId : profile.id,
+            accessToken : profile.id
+          }).then(function(result2){
+            status = 1;
+            return done(null, status);
+          }).catch(function(err){
+            return done(err);
+          })
+        }).catch(function (err){
+          return done(err);
+        });
+      }
+    })
+  }
+));
 // api router
 app.use('/', api({ config, db, passport }));
 

@@ -606,21 +606,22 @@ export default ({config, db}) => {
 
       function updateUserInfo() {
         userModel.update({
-            uniqueId: req.user.uniqueId,
-            displayName: req.body.displayName,
-            profileImage: req.body.profileImage,
-            gender: req.body.gender,
-            country: req.body.country,
-            state: req.body.state,
-            city: req.body.city
-          },
-          {
-            where: {uniqueId: req.user.uniqueId}
-          }).then(() => {
-          res.sendStatus(200);
-        }).catch(function (err) {
-          res.send(err);
-        });
+            uniqueId:req.user.uniqueId,
+            displayName:req.body.displayName,
+            profileImage:req.body.profileImage,
+            gender:req.body.gender,
+            country:req.body.country,
+            state:req.body.state,
+            city:req.body.city,
+            email:req.body.email
+        },
+            {
+                where: {uniqueId:req.user.uniqueId}
+            }).then(() => {
+                res.sendStatus(200);
+            }).catch(function(err){
+                res.send(err);
+            });        
       }
 
       updateUserPassword(function () {

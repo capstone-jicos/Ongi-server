@@ -69,6 +69,18 @@ export default ({config, db, passport}) => {
     });
   });
 
+  api.get('/auth', passport.authenticate('google', {scope:['https://www.googleapis.com/auth/plus.login']}));
+
+  api.get('/auth/callback', passport.authenticate('google', {failureRedirect: 'http://www.ongi.tk/login'}),
+  function(req, res) {
+    console.log(req.user);
+    if(user==1){
+      res.redirect('http://www.ongi.tk/my/InfoUpdate');
+    }
+    else if(user==2){
+      res.redirect('http://www.ongi.tk');
+    }
+  })
   api.post('/join', (req, res) => {
     const userModel = users(db.sequelize, db.Sequelize);
     const credentialModel = credential(db.sequelize, db.Sequelize);

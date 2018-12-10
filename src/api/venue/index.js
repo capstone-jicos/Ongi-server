@@ -290,7 +290,8 @@ export default ({config, db, passport}) => {
                                         eventId : eventId,
                                         status : 1,
                                         hostId : req.user.uniqueId,
-                                        providerId : providerId
+                                        providerId : providerId,
+                                        merchant_uid : merchant_uid
                                     }).then(()=>{
                                         eventModel.update({
                                             status : '1',
@@ -532,6 +533,8 @@ export default ({config, db, passport}) => {
             result = JSON.stringify(result);
             result = JSON.parse(result);
             var providerId = result.providerId;
+            var merchant_uid = result.merchant_uid;
+            let payload = {merchant_uid : merchant_uid};
             if(providerId != req.user.uniqueId) res.sendStatus(412);
             else{
                 applyModel.update({
@@ -544,8 +547,24 @@ export default ({config, db, passport}) => {
                     }, {
                         where : {idx : eventId}
                     }).then(result2 =>{
-                        
-                        res.send(200);
+                        new Payments().cancelPayment(payload, (result, response) =>{
+                            if (result) {
+                                paymentLogModel.update({
+                                    canceled : '1'
+                                }, {
+                                    where : {merchant_uid : merchant_uid}
+                                }).then(result => {
+                                    debugger;
+                                    res.status(201).send({
+                                        "receipt_url" : response.receipt_url
+                                    }).end();
+                                });
+                            } else {
+                                res.status(403).send({
+                                    "message" : payload
+                                })
+                            }
+                        })
                     }).catch(function(err){
                         res.send(err);
                     })

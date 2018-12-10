@@ -4,7 +4,7 @@
   "description": "Starter project for an ES6 RESTful Express API",
   "main": "dist",
   "scripts": {
-    "dev": "nodemon -w src --exec \"babel-node src --presets es2015,stage-0 --expose-debug-as=v8debug --inspect=127.0.0.1\"",
+    "dev": "nodemon -w src --exec \"babel-node src --presets es2015,stage-0 --expose-debug-as=v8debug --inspect=10.0.2.15\"",
     "build": "babel src -s -D -d dist --presets es2015,stage-0 --plugins transform-runtime",
     "start": "node dist",
     "prestart": "npm run -s build",
@@ -32,8 +32,8 @@
   "license": "MIT",
   "dependencies": {
     "async": "^2.6.1",
-    "axios": "^0.18.0",
     "aws-sdk": "^2.353.0",
+    "axios": "^0.18.0",
     "body-parser": "^1.13.3",
     "compression": "^1.5.2",
     "event-stream": "^4.0.1",
@@ -44,6 +44,7 @@
     "morgan": "^1.8.0",
     "mysql": "^2.16.0",
     "mysql2": "^1.6.1",
+    "passport-google-oauth": "^1.0.0",
     "passport-local": "^1.0.0",
     "require-from-url": "^3.1.2",
     "resource-router-middleware": "^0.6.0",

@@ -41,7 +41,7 @@ Upload.formidable = function (req, callback) {
 };
 Upload.s3 = function (res, req, files, callback) {
     if(!files[0]){
-        res.status(401);
+        res.status(403);
         res.json({msg:'파일이 존재하지 않음'});
     }
     else{
