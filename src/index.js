@@ -47,7 +47,7 @@ passport.use(new LocalStrategy({
   session: true
 },
 function(username, password, done){
-  const User = user(db.sequelize, db.Sequelize);
+  const User = credential(db.sequelize, db.Sequelize);
   User.findOne({where: {userId: username}}).then(user => {
     if(!user) return done(null, false);
     if(user.dataValues.accessToken != password) return done(null, false);
