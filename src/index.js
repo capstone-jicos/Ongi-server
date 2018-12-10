@@ -65,12 +65,12 @@ passport.use(new GoogleStrategy({
     let status = 0;
     const userModel = user(db.sequelize, db.Sequelize);
     const credentialModel = credential(db.sequelize, db.Sequelize);
-    credentialModel.findOne({where : {userId:profile.id}}).then((err,userData) => {
+    credentialModel.findOne({where : {userId:profile.id}}).then((userData) => {
       console.log("Find Credential: ");
       console.log(profile);
       if(userData){
-        status = 0;
-        return done(err, status);
+        status = 2;
+        return done(null, status);
       } else {
         userModel.create({
           uniqueId : id,
@@ -83,7 +83,7 @@ passport.use(new GoogleStrategy({
             accessToken : profile.id
           }).then(function(result2){
             status = 1;
-            return done(err, status);
+            return done(null, status);
           }).catch(function(err){
             return done(err);
           })
