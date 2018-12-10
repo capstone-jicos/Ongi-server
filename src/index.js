@@ -58,7 +58,7 @@ function(username, password, done){
 passport.use(new GoogleStrategy({
   clientID: authKey.clientID,
   clientSecret: authKey.clientSecret,
-  callbackURL: "http://localhost:8080/auth/callback"
+  callbackURL: "http://api.ongi.tk/auth/callback"
 },
   function(accessToken, refreshToken, profile, done) {
     var id = timestamp.now()*1000;
