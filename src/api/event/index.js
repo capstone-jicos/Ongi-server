@@ -4,19 +4,23 @@ import venue from '../../models/venue';
 import users from '../../models/users';
 import timeTable from '../../models/venueTimeTable';
 import attendees from '../../models/attendees'
+import paymentLog from "../../models/paymentLog";
+import accesskey from "../../config/accesskey";
 import sessionChecker from '../../session-checker';
-
 import async from 'async';
+
+import payments from "../../lib/payments";
 
 export default ({config, db}) => {
     // timestamps: false,
     // freezeTableName: true
     let api = Router();
-    
+
     const eventModel = event(db.sequelize, db.Sequelize);
     const venueModel = venue(db.sequelize, db.Sequelize);
     const userModel = users(db.sequelize, db.Sequelize);
     const attendeeModel = attendees(db.sequelize, db.Sequelize);
+    const paymentLogModel = paymentLog(db.sequelize, db.Sequelize);
 
     var eventIndex;
     var venueId;
@@ -51,20 +55,20 @@ export default ({config, db}) => {
                             state: getState,
                             city: getCity
                         }
-                    }) 
+                    })
                     .then(venueIdx => {
                         venueIndexLen = venueIdx.length;
                         for (var i=0; i<venueIndexLen; i++){
                             venueIndexArr[i] = venueIdx[i]["idx"];
                         }
                         callback(null,1);
-                    });    
+                    });
                 } else if(getState != undefined && getCity == undefined) {
                     venueModel.findAll({
                         where: {
                             state: getState
                         }
-                    }) 
+                    })
                     .then(venueIdx => {
                         venueIndexLen = venueIdx.length;
                         for (var i=0; i<venueIndexLen; i++){
@@ -73,7 +77,7 @@ export default ({config, db}) => {
                         callback(null,1);
                     });
                 } else {
-                    venueModel.findAll() 
+                    venueModel.findAll()
                     .then(venueIdx => {
                         venueIndexLen = venueIdx.length;
                         for (var i=0; i<venueIndexLen; i++){
@@ -99,8 +103,8 @@ export default ({config, db}) => {
 
         );
     });
-    
-    
+
+
     api.get('/:id', function(req,res) {
 
         eventIndex = req.params.id;
@@ -139,15 +143,15 @@ export default ({config, db}) => {
             // index에 해당하는 데이터 가져오기
             // hostId, venueId 담기
             function(callback){
-                eventModel.findOne({ 
+                eventModel.findOne({
                     where: {
                         idx: eventIndex
                     }
                 })
-                .then(event => {    
+                .then(event => {
                     if (event == undefined) {
                         res.send({});
-                    } 
+                    }
                     title = event['title'];
                     description = event['description'];
                     hostId = event['hostId'];
@@ -177,7 +181,7 @@ export default ({config, db}) => {
                         idx: venueId
                     }
                 })
-                .then(venue => {      
+                .then(venue => {
                     locationName = venue['name'];
                     locationCountry = venue['country'];
                     locationState = venue['state'];
@@ -255,16 +259,16 @@ export default ({config, db}) => {
                 "feeAmount": feeAmount,
                 "type": type,
                 "seats": seats,
-                "startDate": startDate,                
+                "startDate": startDate,
                 "endDate": endDate,
                 "attendCheck": attendCheck,
                 "hostCheck": hostCheck
             };
-            
+
             res.send(val);
-            
+
         }
-        
+
         );
     });
 
@@ -285,7 +289,7 @@ export default ({config, db}) => {
                         eventId: req.params.id,
                         attending: 1
                     }
-                }) 
+                })
                 .then(attendee => {
                     attendeesNum = attendee.length;
                     for (var i=0; i<attendeesNum; i++){
@@ -311,75 +315,116 @@ export default ({config, db}) => {
                         }
                         attendListArr[i] = attendListJson;
                     }
-                    
+
                     res.json(attendListArr);
 
                 });
             }
         );
     });
-  
+
     // 모임 참가 신청
-    api.get('/:id/join', sessionChecker(), (req, res) => {
+    api.post('/:id/join', sessionChecker(), (req, res) => {
 
         var eventId = req.params.id;
         var sId = req.user.uniqueId;
 
         var attending = 2;
 
-        var guestName,guestEmail;
-
         var haveData_1 = false;
         var haveData_0 = false;
         var NoData = false;
 
-        async.series([
+        var guestName,guestEmail;
 
-            function(callback){
-                attendeeModel.findAll({
-                    where: {
-                        eventId: eventId,
-                        attendeeId: sId,
-                    }
-                }) 
-                .then(attendChk => {
-                    if (attendChk.length > 0) {
-                        if (attendChk[0]['attending'] == 0) {
-                            haveData_1 = false;
-                            haveData_0 = true;
-                            NoData = false;
-                        } else{
-                            haveData_1 = true;
-                            haveData_0 = false;
-                            NoData = false;
-                        }
-                    } else {
-                        haveData_1 = false;
-                        haveData_0 = false;
-                        NoData = true;
-                    }
-                    callback(null,1);
-                });
-            },
-            function(callback) {
-                userModel.findOne({
-                    where: {
-                        uniqueId: sId
-                    }
-                }).then(eventGuest=> {
-                    guestName = eventGuest['displayName'];
-                    guestEmail = eventGuest['email'];
+      eventModel.findOne({
+        attributes: ["feeAmount"],
+        where: {
+          idx: req.params.id
+        }
+      }).then(feeAmount => {
+        let payload = req.body;
+        payload.amount = feeAmount.dataValues.feeAmount;
+        paymentLogModel.max("merchant_uid").then(max => {
+            let merchant_uid = max + 1;
+            payload.merchant_uid = merchant_uid;
+            getAttendeeStatus((err, result) => {
+                updateAttendeeStatus(merchant_uid, () => {
+                    new payments().requestPayment(payload, (result, response) => {
+                      if (result) {
+                        updateTransactionLog(response, (err, result) => {
+                          if (result) {
+                            debugger;
 
-                    callback(null,1);
+                            getUserInfo((err, result) => {
+                                var receipt_link = response.receipt_url;
+                                sendEmail((receipt_link) => {})
+                            })
+
+                            res.status(201).send({
+                              "receipt_url": response.receipt_url
+                            }).end();
+                          }
+                        });
+                      } else {
+                        res.status(403).send({
+                          "meesage": payload
+                        })
+                      }
+                    });
+                
                 })
-            },
-            function(callback) {
+              }
+            );
+        });
+      });
+
+      function getAttendeeStatus(callback) {
+        attendeeModel.findAll({
+          where: {
+            eventId: eventId,
+            attendeeId: sId,
+          }
+        })
+          .then(attendChk => {
+            if (attendChk.length > 0) {
+              if (attendChk[0]['attending'] === 0) {
+                haveData_1 = false;
+                haveData_0 = true;
+                NoData = false;
+              } else {
+                haveData_1 = true;
+                haveData_0 = false;
+                NoData = false;
+              }
+            } else {
+              haveData_1 = false;
+              haveData_0 = false;
+              NoData = true;
+            }
+            callback(null, true);
+          });
+      }     
+      
+      function getUserInfo(callback) {
+          userModel.findOne({
+              where: {
+                  uniqueId: sId
+                }
+            }).then(eventGuest=> {
+                guestName = eventGuest['displayName'];
+                guestEmail = eventGuest['email'];
+                callback(null,1);
+            })
+        }
+        
+        function sendEmail(callback,receipt) {
                 const AWS = require("aws-sdk");
     
                 AWS.config.update({
-                    accessKeyId: 'AKIAJALUUOBJNRDDDSFA',
-                    secretAccessKey: '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',
-                    region: 'us-east-1'
+                    accessKeyId: accesskey['accessKeyId'],
+                    secretAccessKey: accesskey['secretAccessKey'],
+                    region: accesskey['region']
                 });
     
                 const ses = new AWS.SES({ apiVersion: "2010-12-01" });
@@ -392,7 +437,11 @@ export default ({config, db}) => {
                         Html: {
                             // HTML Format of the email
                             Charset: "UTF-8",
-                            Data: "<html><body style='margin: 0; padding: 0;'><table border='0'><tr style='text-align: center; font-size: 50px;'><td>"+ guestName +"님!</td></tr><tr><td><img src=\"http://public.ongi.tk/image/event_join.PNG\"/></td></tr></table></body></html>"
+                            Data: "<html><body style='margin: 0; padding: 0;'><table border='0'>"
+                            +"<tr style='text-align: center; font-size: 50px;'><td>"+ guestName +"님!</td></tr>"
+                            +"<tr><td><img src=\"http://public.ongi.tk/image/event_join.PNG\"/></td></tr>"
+                            +"<tr style='text-align: center; font-size: 25px;'><td><a href="+receipt+">결제 정보 확인하기</a></td></tr>"
+                            +"</table></body></html>"
                         },
                         Text: {
                             Charset: "UTF-8",
@@ -414,37 +463,43 @@ export default ({config, db}) => {
                     callback(null,1);
                 })
             }
-        ],
 
-        function(){
-            if (NoData) {
-                attendeeModel.create({
-                    eventId: eventId,
-                    attendeeId: sId,
-                    attending: attending
-                }).then(
-                    res.sendStatus(201)
-                );
-            } 
-            else if (haveData_0) {
-                attendeeModel.update(
-                    {attending: 2},
-                    {
-                    where: {
-                        eventId: eventId,
-                        attendeeId: sId
-                    }
-                }).then(() => {
-                    res.sendStatus(201);
-                }).catch(function(err){
-                    res.send(err);
-                });
-            } 
-            else {
-                res.sendStatus(403)
-            }
-        });        
-            
+      function updateAttendeeStatus(merchant_uid, callback) {
+        if (NoData) {
+          attendeeModel.create({
+            eventId: eventId,
+            attendeeId: sId,
+            attending: attending,
+            merchant_uid: merchant_uid
+          }).then(() => {
+            callback(null);
+          });
+        }
+        else if (haveData_0) {
+          attendeeModel.update(
+            {attending: 2,
+             merchant_uid: merchant_uid},
+            {
+              where: {
+                eventId: eventId,
+                attendeeId: sId
+              }
+            }).then(() => {
+            callback(null);
+          }).catch(function (err) {
+            res.send(err);
+          });
+        }
+        else {
+          res.status(403).send({"message": "이미 등록된 모임입니다."}).end();
+        }
+      }
+      function updateTransactionLog(payload, callback) {
+        payload.userId = req.user.uniqueId;
+        paymentLogModel.upsert(payload).then(result => {
+          callback(null, result);
+        });
+      }
     });
 
     api.get('/:id/cancel', sessionChecker(), (req, res) => {
@@ -464,14 +519,12 @@ export default ({config, db}) => {
         }).catch(function(err){
             res.send(err);
         });
-            
+
     });
 
 
     api.post('/create', sessionChecker(), (req, res) => {
         var userId = req.user.uniqueId;
-        var eventNum, seatNum;
-        var tableModel = timeTable(db.sequelize, db.Sequelize);
         var eventModel = event(db.sequelize, db.Sequelize);
         async.series([
             function(callback){
@@ -487,34 +540,21 @@ export default ({config, db}) => {
                     startDate: req.body.startDate,
                     endDate: req.body.endDate
                 }).then(result => {
-                    eventNum = result.get({plain:true}).idx * 1;
-                    seatNum = result.get({palin:true}).seats * 1;
                     callback(null, result);
                 }).catch(function (err){
                     callback(err, null);
-                });  
-            }            
+                });
+            }
         ],
             function(err, result){
                 if(err) res.send(err)
                 else {
-                    tableModel.create({
-                        eventId: eventNum,
-                        venueId: req.body.venueId,
-                        startDate: req.body.startDate,
-                        endDate: req.body.endDate,
-                        seats: seatNum
-                    }).then(end => {
-                        res.send(result);
-                    }).catch(function (err){
-                        res.send(err);
-                    });
-                }              
+                    res.send(result)
+                }
             }
         );
-        
+
     });
-    
 
     return api;
 };

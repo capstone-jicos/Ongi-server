@@ -4,6 +4,7 @@ import users from '../../models/users';
 import event from '../../models/events';
 import venue from '../../models/venue';
 import attendees from '../../models/attendees'
+import accesskey from "../../config/accesskey";
 
 export default ({config, db}) => {
     let api = Router();
@@ -194,12 +195,13 @@ export default ({config, db}) => {
     api.post('/me/hosted/:id/accepted', sessionChecker(), function(req,res) {
         var eventIndex = req.params.id;
         var uniqueAttendee = req.body.attendeeId;
-
+        
         var guestEmail,guestName;
+        var eventTitle,eventStart,eventEnd,venueIndex;
+        var venueCountry,venueState,venueCity,venueDetail;
         
         async.series([
-
-            function(callback){
+             function(callback){
                 attendeeModel.update(
                     {attending: 1},
                     {
@@ -218,16 +220,22 @@ export default ({config, db}) => {
                     }
                 }).then(eventMail => {
                     eventTitle = eventMail['title'];
-                    eventDesc = eventMail['description'];
-                    eventHostId = eventMail['hostId'];
-                    eventVenueId = eventMail['venueId'];
-                    eventFee = eventMail['feeAmount'];
-                    eventImage = eventMail['eventImages'];
-                    eventType = eventMail['type'];
-                    eventSeat = eventMail['seats'];
+                    venueIndex = eventMail['venueId'];
                     eventStart = eventMail['startDate'];
                     eventEnd = eventMail['endDate'];
-
+                    callback(null,1);
+                })
+            },
+            function(callback){
+                venueModel.findOne({
+                    where: {
+                        idx: venueIndex
+                    }
+                }).then(venueInfo => {
+                    venueCountry = venueInfo['country'];
+                    venueState = venueInfo['state'];
+                    venueCity = venueInfo['city'];
+                    venueDetail = venueInfo['detail'];
                     callback(null,1);
                 })
             },
@@ -239,54 +247,58 @@ export default ({config, db}) => {
                 }).then(eventGuest=> {
                     guestName = eventGuest['displayName'];
                     guestEmail = eventGuest['email'];
-
-                    callback(null,1);
+                     callback(null,1);
                 })
             }
         ],
         function() {
+
             const AWS = require("aws-sdk");
 
-            AWS.config.update({
-                accessKeyId: 'AKIAJALUUOBJNRDDDSFA',
-                secretAccessKey: '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',
-                region: 'us-east-1'
+             AWS.config.update({
+                accessKeyId: accesskey['accessKeyId'],
+                secretAccessKey: accesskey['secretAccessKey'],
+                region: accesskey['region']
             });
 
             const ses = new AWS.SES({ apiVersion: "2010-12-01" });
+            
             const params = {
-            Destination: {
-                ToAddresses: [guestEmail] // Email address/addresses that you want to send your email
-            },
-            Message: {
-                Body: {
-                    Html: {
-                        // HTML Format of the email
-                        Charset: "UTF-8",
-                        Data: "<html><body style='margin: 0; padding: 0;'><table border='0'><tr style='text-align: center; font-size: 50px;'><td>"+ guestName +"님!</td></tr><tr><td><img src=\"http://public.ongi.tk/image/event_accepted.PNG\"/></td></tr></table></body></html>"
+                Destination: {
+                    ToAddresses: [guestEmail] // Email address/addresses that you want to send your email
+                },
+                Message: {
+                    Body: {
+                        Html: {
+                            // HTML Format of the email
+                            Charset: "UTF-8",
+                            Data: "<html><body style='margin: 0; padding: 0;'><table border='0'>"
+                            +"<tr style='text-align: center; font-size: 50px;'><td colspan='2'>"+ guestName +"님!</td></tr>"
+                            +"<tr><td colspan='2'><img src=\"http://public.ongi.tk/image/event_accepted.PNG\"/></td></tr>"
+                            +"<tr style='font-size: 25px;'><td style='text-align:right'>모임 제목</td><td>&nbsp;&nbsp;"+eventTitle+"</td></tr>"
+                            +"<tr style='font-size: 25px;'><td style='text-align:right'>모임 시작</td><td>&nbsp;&nbsp;"+eventStart+"</td></tr>"
+                            +"<tr style='font-size: 25px;'><td style='text-align:right'>모임 종료</td><td>&nbsp;&nbsp;"+eventEnd+"</td></tr>"
+                            +"<tr style='font-size: 25px;'><td style='text-align:right'>모임 장소</td><td>&nbsp;&nbsp;"+venueCountry+" "+venueState+" "+venueCity+" "+venueDetail+"</td></tr>"
+                            +"</table></body></html>"
+                        },
+                        Text: {
+                            Charset: "UTF-8",
+                            Data: "Ongi"
+                        }
                     },
-                    Text: {
+                    Subject: {
                         Charset: "UTF-8",
-                        Data: "Ongi"
+                        Data: "모임 수락!"
                     }
                 },
-                Subject: {
-                    Charset: "UTF-8",
-                    Data: "모임 수락!"
-                }
-            },
-            Source: "no-reply@ongi.tk"
+                Source: "no-reply@ongi.tk"
             };
 
             const sendEmail = ses.sendEmail(params).promise();
-
+            
             sendEmail
             .then(data => {
-                console.log("email submitted to SES", data);
                 res.sendStatus(200);
-            })
-            .catch(error => {
-                console.log(error);
             });
         });
     });
@@ -295,11 +307,10 @@ export default ({config, db}) => {
     api.post('/me/hosted/:id/declined', sessionChecker(), function(req,res) {
         var eventIndex = req.params.id;
         var uniqueAttendee = req.body.attendeeId;
+    
         var guestName,guestEmail;
-
-        async.series([
-
-            function(callback){
+         async.series([
+             function(callback){
                 attendeeModel.update(
                     {attending: 0},
                     {
@@ -319,54 +330,54 @@ export default ({config, db}) => {
                 }).then(eventGuest=> {
                     guestName = eventGuest['displayName'];
                     guestEmail = eventGuest['email'];
-
-                    callback(null,1);
+                     callback(null,1);
                 })
             }
+
         ],
         function() {
+
             const AWS = require("aws-sdk");
 
             AWS.config.update({
-                accessKeyId: 'AKIAJALUUOBJNRDDDSFA',
-                secretAccessKey: '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',
-                region: 'us-east-1'
+                accessKeyId: accesskey['accessKeyId'],
+                secretAccessKey: accesskey['secretAccessKey'],
+                region: accesskey['region']
             });
-
+            
             const ses = new AWS.SES({ apiVersion: "2010-12-01" });
+            
             const params = {
-            Destination: {
-                ToAddresses: [guestEmail] // Email address/addresses that you want to send your email
-            },
-            Message: {
-                Body: {
-                    Html: {
-                        // HTML Format of the email
-                        Charset: "UTF-8",
-                        Data: "<html><body style='margin: 0; padding: 0;'><table border='0'><tr style='text-align: center; font-size: 50px;'><td>"+ guestName +"님!</td></tr><tr><td><img src=\"http://public.ongi.tk/image/event_declined.PNG\"/></td></tr></table></body></html>"
+                Destination: {
+                    ToAddresses: [guestEmail] // Email address/addresses that you want to send your email
+                },
+                Message: {
+                    Body: {
+                        Html: {
+                            // HTML Format of the email
+                            Charset: "UTF-8",
+                            Data: "<html><body style='margin: 0; padding: 0;'><table border='0'><tr style='text-align: center; font-size: 50px;'><td>"+ guestName +"님!</td></tr><tr><td><img src=\"http://public.ongi.tk/image/event_declined.PNG\"/></td></tr></table></body></html>"
+                        },
+                        Text: {
+                            Charset: "UTF-8",
+                            Data: "Ongi"
+                        }
                     },
-                    Text: {
+                    Subject: {
                         Charset: "UTF-8",
-                        Data: "Ongi"
+                        Data: "모임 거절ㅠㅠ"
                     }
                 },
-                Subject: {
-                    Charset: "UTF-8",
-                    Data: "모임 거절ㅠㅠ"
-                }
-            },
-            Source: "no-reply@ongi.tk"
+                Source: "no-reply@ongi.tk"
             };
-
+            
             const sendEmail = ses.sendEmail(params).promise();
 
             sendEmail
             .then(data => {
-                console.log("email submitted to SES", data);
                 res.sendStatus(200);
             })
             .catch(error => {
-                console.log(error);
             });
         });
     });
