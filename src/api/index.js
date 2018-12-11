@@ -72,14 +72,18 @@ export default ({config, db, passport}) => {
   api.get('/auth', passport.authenticate('google', {scope:['https://www.googleapis.com/auth/plus.login']}));
 
   api.get('/auth/callback', passport.authenticate('google', {failureRedirect: 'http://www.naver.com'}),
-  function(req, res) {
-    if (req.user.status === 1) {
-      res.redirect('http://www.daum.net');
+    function (req, res) {
+      let url = process.env.NODE_ENV === "production"
+        ? "https://www.ongi.tk" : "http://localhost:8081";
+      if (req.user.status === 1) {
+        res.redirect(`${url}/my/InfoUpdate`);
+      }
+      else if (req.user.status === 2) {
+        res.redirect(`${url}`);
+      }
     }
-    else if (req.user.status === 2) {
-      res.redirect('http://www.google.com');
-    }
-  })
+  );
+
   api.post('/join', (req, res) => {
     const userModel = users(db.sequelize, db.Sequelize);
     const credentialModel = credential(db.sequelize, db.Sequelize);
