@@ -47,7 +47,7 @@ passport.use(new LocalStrategy({
   session: true
 },
 function(username, password, done){
-  const User = user(db.sequelize, db.Sequelize);
+  const User = credential(db.sequelize, db.Sequelize);
   User.findOne({where: {userId: username}}).then(user => {
     if(!user) return done(null, false);
     if(user.dataValues.accessToken != password) return done(null, false);
@@ -58,7 +58,8 @@ function(username, password, done){
 passport.use(new GoogleStrategy({
   clientID: authKey.clientID,
   clientSecret: authKey.clientSecret,
-  callbackURL: "http://localhost:8080/auth/callback"
+    callbackURL: process.env.NODE_ENV === "production"
+      ? "https://api.ongi.tk/auth/callback" : "http://localhost:8080/auth/callback"
 },
   function(accessToken, refreshToken, profile, done) {
     var id = timestamp.now()*1000;
