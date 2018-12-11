@@ -8,7 +8,6 @@ import timeTable from '../../models/venueTimeTable';
 import applyTable from '../../models/applyVenue';
 import paymentLog from "../../models/paymentLog";
 import Payments from '../../lib/payments';
-import accesskey from '../../config/accesskey';
 
 export default ({config, db, passport}) => {
     let api = Router();
@@ -18,8 +17,6 @@ export default ({config, db, passport}) => {
     const venueModel = venue(db.sequelize, db.Sequelize);
     const applyModel = applyTable(db.sequelize, db.Sequelize);
     const paymentLogModel = paymentLog(db.sequelize, db.Sequelize);
-    const userModel = users(db.sequelize, db.Sequelize);
-
 
     venueModel.hasMany(db.venueTimeTable, {foreignKey:'venueId', sourceKey:'idx'});
     tableModel.belongsTo(db.venue, {foreignKey:'venueId', targetKey:'idx'});
@@ -227,19 +224,7 @@ export default ({config, db, passport}) => {
         var venueId = req.query.venueId;
         var eventId = req.query.eventId;
 
-        var providerName,providerEmail;
-
         let payload = req.body;
-
-        const AWS = require("aws-sdk");
-          
-        AWS.config.update({
-            accessKeyId: accesskey['accessKeyId'],
-            secretAccessKey: accesskey['secretAccessKey'],
-            region: accesskey['region']
-        });
-
-        const ses = new AWS.SES({ apiVersion: "2010-12-01" });
 
         venueModel.findAll({where:{
             idx : venueId
@@ -274,7 +259,6 @@ export default ({config, db, passport}) => {
                 }
                 if(errstat) res.Status(412).send({"message":"예약할수 없는 시간입니다."});
                 else {
-
                     paymentLogModel.max("merchant_uid").then(max => {
                         let merchant_uid = max + 1;
                         payload.merchant_uid = merchant_uid;
@@ -299,65 +283,20 @@ export default ({config, db, passport}) => {
                                         }, {
                                             where : {idx:eventId}
                                         }).then(() => {
-                                            venueModel.findOne({
-                                                where: {
-                                                    idx: venueId
-                                                }
-                                            }).then(getId => {
-                                                userModel.findOne({
-                                                    where: {
-                                                        uniqueId: getId['uniqueId']
-                                                    }
-                                                }).then(providerInfo => {
-                                                    providerName = providerInfo['displayName'];
-                                                    providerEmail = providerInfo['email'];
-
-                                                    debugger;
-
-                                                    const params = {
-                                                        Destination: {
-                                                            ToAddresses: [providerEmail] // Email address/addresses that you want to send your email
-                                                        },
-                                                        Message: {
-                                                            Body: {
-                                                                Html: {
-                                                                    // HTML Format of the email
-                                                                    Charset: "UTF-8",
-                                                                    Data: "<html><body style='margin: 0; padding: 0;'><table border='0'><tr style='text-align: center; font-size: 50px;'><td>"+ providerName +"님!</td></tr><tr><td><img src=\"http://public.ongi.tk/image/venue_request.PNG\"/></td></tr></table></body></html>"
-                                                                },
-                                                                Text: {
-                                                                    Charset: "UTF-8",
-                                                                    Data: "Ongi"
-                                                                }
-                                                            },
-                                                            Subject: {
-                                                                Charset: "UTF-8",
-                                                                Data: "장소 요청!"
-                                                            }
-                                                        },
-                                                        Source: "no-reply@ongi.tk"
-                                                    };
-
-                                                    const sendEmail = ses.sendEmail(params).promise();
-
-                                                    sendEmail
-                                                    .then(data => {
-
-                                                        res.status(201).send({
-                                                            "receipt_url" : response.receipt_url
-                                                        }).end();
-                                                        
-                                                    })
-
-
-                                                })
-                                            })
+                                            debugger;
+                                            res.status(201).send({
+                                                "receipt_url" : response.receipt_url
+                                            }).end();
                                         })
                                     })
                                 });
                             } else {
-                                res.status(403).send({
-                                    "message" : payload
+                                paymentLogModel.create({
+                                    merchant_uid : merchant_uid,
+                                }).then(()=>{
+                                    res.status(403).send({
+                                        "meesage": payload
+                                    })
                                 })
                             }
                         })
@@ -398,22 +337,7 @@ export default ({config, db, passport}) => {
     })
     
     api.get('/accept', sessionChecker(), (req, res) =>{
-        var hostId,hostName,hostEmail;
-        
         var eventId = req.query.eventId;
-        
-        const AWS = require("aws-sdk");
-          
-        AWS.config.update({
-            accessKeyId: accesskey['accessKeyId'],
-            secretAccessKey: accesskey['secretAccessKey'],
-            region: accesskey['region']
-        });
-
-        const ses = new AWS.SES({ apiVersion: "2010-12-01" });
-
-        
-
         applyModel.findOne({
             where : {
                 eventId : eventId
@@ -430,11 +354,9 @@ export default ({config, db, passport}) => {
                 }, {
                     where : {eventId : eventId}
                 }).then(result =>{
-                    console.log("111");
                     eventModel.findOne({
                         where : {idx : eventId}
                     }).then(date =>{
-                        console.log("222");
                         date = JSON.stringify(date);
                         date = JSON.parse(date);
                         var startDate = date.startDate;
@@ -451,60 +373,7 @@ export default ({config, db, passport}) => {
                                 startDate : startDate,
                                 endDate : endDate
                             }).then(result3 => {
-                                eventModel.findOne({
-                                    where: {
-                                        idx : eventId
-                                    }
-                                }).then(hostInfo => {
-                                    hostId = hostInfo['hostId'];
-                                    userModel.findOne({
-                                        where: {
-                                            uniqueId: hostId
-                                          }
-                                      }).then(hostDetail=> {
-                                          hostName = hostDetail['displayName'];
-                                          hostEmail = hostDetail['email'];
-
-                                          const params = {
-                                            Destination: {
-                                                ToAddresses: [hostEmail] // Email address/addresses that you want to send your email
-                                            },
-                                            Message: {
-                                                Body: {
-                                                    Html: {
-                                                        // HTML Format of the email
-                                                        Charset: "UTF-8",
-                                                        Data: "<html><body style='margin: 0; padding: 0;'><table border='0'><tr style='text-align: center; font-size: 50px;'><td>"+ hostName +"님!</td></tr><tr><td><img src=\"http://public.ongi.tk/image/venue_request.PNG\"/></td></tr></table></body></html>"
-                                                    },
-                                                    Text: {
-                                                        Charset: "UTF-8",
-                                                        Data: "Ongi"
-                                                    }
-                                                },
-                                                Subject: {
-                                                    Charset: "UTF-8",
-                                                    Data: "장소 신청 완료!"
-                                                }
-                                            },
-                                            Source: "no-reply@ongi.tk"
-                                        };
-
-                                        const sendEmail = ses.sendEmail(params).promise();
-
-                                        sendEmail
-                                        .then(data => {
-
-                                            res.send(200);
-                                            
-                                        }).catch(function(err){
-                                            res.send(err);
-                                        })
-                                      }).catch(function(err){
-                                        res.send(err);
-                                    })
-                                }).catch(function(err){
-                                    res.send(err);
-                                })
+                                res.send(200);
                             }).catch(function(err){
                                 res.send(err);
                             })

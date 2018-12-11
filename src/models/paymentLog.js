@@ -9,19 +9,16 @@ module.exports = function(sequelize, DataTypes) {
     },
     userId: {
       type: DataTypes.STRING(64),
-      allowNull: false,
       references: {
         model: 'users',
         key: 'uniqueId'
       }
     },
     receipt_url: {
-      type: DataTypes.STRING(128),
-      allowNull: false
+      type: DataTypes.STRING(128)
     },
     canceled: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
+      type: DataTypes.BOOLEAN
     }
   }, {
     tableName: 'paymentLog',
