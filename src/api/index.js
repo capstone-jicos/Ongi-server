@@ -77,7 +77,9 @@ export default ({config, db, passport}) => {
 
   api.get('/auth', passport.authenticate('google', {scope:['https://www.googleapis.com/auth/plus.login']}));
 
-  api.get('/auth/callback', passport.authenticate('google', {failureRedirect: 'http://www.naver.com'}),
+  api.get('/auth/callback', passport.authenticate('google', {
+    failureRedirect: process.env.NODE_ENV === "production"
+      ? "https://www.ongi.tk" : "http://localhost:8081"}),
     function (req, res) {
       let url = process.env.NODE_ENV === "production"
         ? "https://www.ongi.tk" : "http://localhost:8081";
