@@ -4,7 +4,7 @@
   "description": "Starter project for an ES6 RESTful Express API",
   "main": "dist",
   "scripts": {
-    "dev": "nodemon -w src --exec \"babel-node src --presets es2015,stage-0 --expose-debug-as=v8debug --inspect=10.0.2.15\"",
+    "dev": "nodemon -w src --exec \"babel-node src --presets es2015,stage-0 --expose-debug-as=v8debug --inspect=127.0.0.1\"",
     "build": "babel src -s -D -d dist --presets es2015,stage-0 --plugins transform-runtime",
     "start": "node dist",
     "prestart": "npm run -s build",

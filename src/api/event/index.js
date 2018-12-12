@@ -368,8 +368,12 @@ export default ({config, db}) => {
                           }
                         });
                       } else {
-                        res.status(403).send({
-                          "meesage": payload
+                        paymentLogModel.create({
+                            merchant_uid : merchant_uid,
+                        }).then(()=>{
+                            res.status(403).send({
+                                "meesage": payload
+                            })
                         })
                       }
                     });
