@@ -15,6 +15,7 @@ let uid = 42;
 
 export default ({config, db, passport}) => {
   let api = Router();
+
   api.post('/upload', [sessionChecker(), upload({config})], (req,res) => {
     console.log(req.photoUrl);
     res.json({photoUrl:req.photoUrl})
@@ -53,8 +54,13 @@ export default ({config, db, passport}) => {
 
   // perhaps expose some API metadata at the root
   api.get('/', (req, res) => {
-    console.log(req.fields);
-    //res.json({version});
+    let url;
+    if (process.env.NODE_ENV === "production") {
+      url = "http://www.ongi.tk";
+    } else {
+      url = "http://localhost:8081";
+    }
+    res.redirect(url);
   });
 
   api.get('/logout', function(req, res){
