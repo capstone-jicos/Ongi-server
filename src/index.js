@@ -79,8 +79,8 @@ passport.use(new GoogleStrategy({
           credentialModel.create({
             provider : 'google',
             uniqueId : id,
-            userId : profile.id,
-            accessToken : profile.id
+            userId : profile.id
+            //accessToken : profile.id
           }).then(function(result2){
             result.dataValues.status = 1;
             return done(null, result.dataValues);
